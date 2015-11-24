@@ -73,6 +73,12 @@ let () =
 	
 	
 	let decls, output_id = Compile_to_aez.main ft main_node in
+	
+      Format.printf "/**************************************/@.";
+      Format.printf "/* AEZ ast                            */@.";
+      Format.printf "/**************************************/@.";
+	  Aez_printer.main decls output_id;
+	  
     (* XXX TODO XXX *)
     Format.printf "Don't know@.";
 

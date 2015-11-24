@@ -30,11 +30,11 @@ and formula =
   
 type stream_body = SB_term of term | SB_formula of formula
 
-type stream_decl = { 
+type stream_declaration = { 
   sd_ident: ident;
   sd_type: Asttypes.base_ty;
   sd_body: stream_body
 }
 
 
-type node = stream_decl list
+type node = stream_declaration list

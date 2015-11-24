@@ -91,7 +91,7 @@ let rec compile_expr past expr = match expr.texpr_desc with
 	let term2 = compile_expr past expr2 in
 	T_ite (F_time_eq past, term1, term2)
 	
-  | TE_pre expr -> compile_expr (past + 1) expr
+  | TE_pre expr -> compile_expr (past+1) expr
   
   | TE_tuple exprs -> 
     let terms = List.map (compile_expr past) exprs in
@@ -203,12 +203,17 @@ let separate_tuples t_file tpatt_term_couples aux_decls =
   and handle_formula node_calls formula = match formula with
     | F_term t ->
 	  let ts, node_calls = handle_term node_calls t in
-	  F_lco (LC_and, List.map (fun t -> F_term t) ts), node_calls
+	  (match ts with
+	    | [t] -> F_term t
+		| _ -> F_lco (LC_and, List.map (fun t -> F_term t) ts)
+		), node_calls
 	| F_cmp (cmp, t1, t2) ->
 	  let ts1, node_calls = handle_term node_calls t1 in
 	  let ts2, node_calls = handle_term node_calls t2 in
-	  F_lco (LC_and, List.map2 (fun t1 t2 -> F_cmp (cmp, t1, t2)) ts1 ts2),
-	    node_calls
+	  (match ts1, ts2 with
+	    | [t1], [t2] -> F_cmp (cmp, t1, t2)
+	    | _ -> F_lco (LC_and, List.map2 (fun t1 t2 -> F_cmp (cmp, t1, t2)) ts1 ts2)
+		), node_calls
 	| F_time_eq _ -> formula, node_calls
 	| F_lco (lco, fs) ->
 	  let fs, node_calls = map_fold handle_formula node_calls fs in
@@ -230,11 +235,11 @@ let separate_tuples t_file tpatt_term_couples aux_decls =
 	decl::decls_acc, node_calls
   in
   
-  let decls, node_calls = List.fold_left handle_tpatt_term_couple ([],[]) tpatt_term_couples in
+  let user_decls, node_calls = List.fold_left handle_tpatt_term_couple ([],[]) tpatt_term_couples in
   
-  let decls, node_calls = List.fold_left handle_aux_decl (decls, node_calls) aux_decls in
+  let aux_decls, node_calls = List.fold_left handle_aux_decl ([], node_calls) aux_decls in
   
-  decls, node_calls
+  (List.rev user_decls)@(List.rev aux_decls), node_calls
   
  
 
@@ -346,10 +351,10 @@ and compile_node t_file compiled_nodes node =
   
 let main t_file main_node_name =
   let node = 
-    try List.find (fun tn -> tn.tn_name.name = main_node_name) t_file
+    try List.find (fun tn -> tn.tn_name.Ident.name = main_node_name) t_file
 	with Not_found -> assert false
   in
-  let output_id = match node.tn_input with
+  let output_id = match node.tn_output with
     | [(id, bty)] when bty = Tbool -> id
 	| _ -> assert false
   in
