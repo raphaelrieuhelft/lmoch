@@ -13,7 +13,7 @@ type term =
   | T_cst of constant
   | T_op of term_operator * term * term
   | T_ite of formula * term * term
-  | T_app of ident * int (* int is k so that time is n-k *)
+  | T_app of ident * int (* int is k so that time is n-k, it's always the only parameter *)
   
   (* intermediate compilation, not present in final form *)
   | T_formula of formula
@@ -24,7 +24,7 @@ type term =
 and formula =
   | F_term of term
   | F_cmp of comparison * term * term
-  | F_time_eq of int (* "n = k" where n is time and k is int *)
+  | F_time_eq of int (* "n = k" where n is time and k is int, example ite(n=0, , ) *)
   | F_lco of logic_connector * (formula list)
 
   
