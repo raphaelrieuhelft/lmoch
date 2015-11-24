@@ -70,6 +70,9 @@ let () =
     if !type_only then exit 0;
     if main_node = "" then exit 0;
 
+	
+	
+	let decls, output_id = Compile_to_aez.main ft main_node in
     (* XXX TODO XXX *)
     Format.printf "Don't know@.";
 

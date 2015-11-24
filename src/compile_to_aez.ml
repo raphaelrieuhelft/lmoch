@@ -1,8 +1,9 @@
+open Asttypes
 open Typed_ast
 open Aez_ast
 
 
-module IdMap = Map.make (struct type t = ident let compare = compare end)
+module IdMap = Map.Make (struct type t = ident let compare = compare end)
 
 (* ('a -> 'b -> ('c * 'a)) -> 'a -> ('b list) -> (('c list) * 'a) *)
 let rec map_fold f a = function
@@ -14,15 +15,15 @@ let rec map_fold f a = function
 
 let rec list_map3 f l1 l2 l3 = match l1, l2, l3 with
   | [], [], [] -> []
-  | h1::t1, h2::t2, h3::t3 -> (f h1 h2 h3)::(list_map3 t1 t2 t3)
-  | _ -> raise Invalid_argument
+  | h1::t1, h2::t2, h3::t3 -> (f h1 h2 h3)::(list_map3 f t1 t2 t3)
+  | _ -> raise (Invalid_argument "list_map3")
 
 
 
 
 
 (* expr to term, including T_formula, T_tuple, T_app_node *)
-let rec compile_expr past expr = match expr.texpr_disc with
+let rec compile_expr past expr = match expr.texpr_desc with
 
   | TE_const c -> T_cst c
   
@@ -40,9 +41,11 @@ let rec compile_expr past expr = match expr.texpr_disc with
 			| Op_mul | Op_mul_f -> TO_times
 			| Op_div | Op_div_f -> TO_div
 			| Op_mod -> TO_mod
+			| _ -> assert false
 		  in
-		  (match terms with [term1; term2] ->
-		    T_op (term_op, term1, term2))
+		  (match terms with 
+		    | [term1; term2] -> T_op (term_op, term1, term2)
+			| _ -> assert false)
 			
 		| Op_eq | Op_neq | Op_lt | Op_le | Op_gt | Op_ge ->
 		  let cmp, exchange = match op with
@@ -52,22 +55,28 @@ let rec compile_expr past expr = match expr.texpr_disc with
 			| Op_le -> Cmp_leq, false
 			| Op_gt -> Cmp_leq, true
 			| Op_ge -> Cmp_lt, true
+			| _ -> assert false
 		  in
-		  let formula = match terms with [term1; term2] ->
-		    if exchange then F_cmp (cmp, term2, term1) else F_cmp (cmp, term1, term2)
+		  let formula = match terms with 
+		    | [term1; term2] ->
+		      if exchange then F_cmp (cmp, term2, term1) else F_cmp (cmp, term1, term2)
+			| _ -> assert false
 		  in
 		  T_formula formula
 			
 		| Op_and | Op_or | Op_impl | Op_not ->
 		  let lco = match op with
-		    | Op_and -> LC_and | Op_or -> Lc_or 
+		    | Op_and -> LC_and | Op_or -> LC_or 
 			| Op_impl -> LC_impl | Op_not -> LC_not
+			| _ -> assert false
 		  in
 		  let formulas = List.map (fun t -> F_term t) terms in
 		  T_formula (F_lco (lco, formulas))
 		  
-		| Op_if -> (match terms with [cond; term1; term2] ->
-		  T_ite (F_term cond, term1, term2)
+		| Op_if -> 
+		  (match terms with 
+		    | [cond; term1; term2] -> T_ite (F_term cond, term1, term2)
+			| _ -> assert false)
 	end
   
   | TE_app (ident, exprs) ->
@@ -75,13 +84,14 @@ let rec compile_expr past expr = match expr.texpr_disc with
 	T_app_node (ident, past, terms)
   
   | TE_prim (_, [expr]) -> compile_expr past expr
+  | TE_prim _ -> assert false
   
   | TE_arrow (expr1, expr2) ->
     let term1 = compile_expr past expr1 in
 	let term2 = compile_expr past expr2 in
 	T_ite (F_time_eq past, term1, term2)
 	
-  | TE_pre expr -> compile_expr (incr past) expr
+  | TE_pre expr -> compile_expr (past + 1) expr
   
   | TE_tuple exprs -> 
     let terms = List.map (compile_expr past) exprs in
@@ -111,7 +121,7 @@ let rec separate_formulas_in_term aux_decls term = match term with
     let f, aux_decls = separate_formulas_in_formula aux_decls f in
     let ident = Ident.make "aux" Ident.Stream in
 	let decl = { sd_ident = ident; sd_type = Tbool; sd_body = SB_formula f } in
-	TE_app (ident, 0), decl::aux_decls
+	T_app (ident, 0), decl::aux_decls
   | T_tuple ts ->
     let ts, aux_decls = map_fold separate_formulas_in_term aux_decls ts in
 	T_tuple ts, aux_decls
@@ -148,14 +158,14 @@ type node_call = {
   nc_outs: ident list;
 }
 
-let reid node_ident ident = match ident.kind with
-  | Stream ->
-    Ident.make (node_ident.name ^ "_" ^ ident.name) ident.kind
-  | Node -> assert false
-  | Prim -> assert false
+let reid node_ident ident = match ident.Ident.kind with
+  | Ident.Stream ->
+    Ident.make (node_ident.Ident.name ^ "_" ^ ident.Ident.name) ident.Ident.kind
+  | Ident.Node -> assert false
+  | Ident.Prim -> assert false
   
 let find_node t_file node_ident =
-  try List.find (fun tn -> tn.tn_name = ident) t_file
+  try List.find (fun tn -> tn.tn_name = node_ident) t_file
   with Not_found -> assert false
 
   
@@ -174,7 +184,7 @@ let separate_tuples t_file tpatt_term_couples aux_decls =
 	| T_op (op, t1, t2) ->
       let ts1, node_calls = handle_term node_calls t1 in
 	  let ts2, node_calls = handle_term node_calls t2 in
-	  List.map2 (fun t1 t2 -> T_op (op, t1, t2)) ts1 ts2, aux_decls
+	  List.map2 (fun t1 t2 -> T_op (op, t1, t2)) ts1 ts2, node_calls
 	| T_ite (f, t1, t2) ->
 	  let f, node_calls = handle_formula node_calls f in
 	  let ts1, node_calls = handle_term node_calls t1 in
@@ -184,10 +194,10 @@ let separate_tuples t_file tpatt_term_couples aux_decls =
 	| T_formula _ -> assert false
 	| T_tuple ts ->
 	  let tss, node_calls = map_fold handle_term node_calls ts in
-	  List.map (function [t] -> t) tss, node_calls
+	  List.map (function [t] -> t | _ -> assert false) tss, node_calls
 	| T_app_node (id, past, ts) ->
 	  let tss, node_calls = map_fold handle_term node_calls ts in
-	  let nc = make_node_call id past (List.map (function [t] -> t) tss) in
+	  let nc = make_node_call id past (List.map (function [t] -> t | _ -> assert false) tss) in
 	  List.map (fun id -> T_app (id, past)) nc.nc_outs, nc::node_calls
 	  
   and handle_formula node_calls formula = match formula with
@@ -287,7 +297,8 @@ let reid_decls node_id init_reidmap decls =
 
 let rec compute_node_call t_file compiled_nodes nc =
   let node_id = nc.nc_node.tn_name in
-  let node_decls, compiled_nodes = compile_node t_file computed_node node_id in
+  let node = find_node t_file node_id in
+  let node_decls, compiled_nodes = compile_node t_file compiled_nodes node in
   let init_reidmap = List.fold_left2
     (fun reidmap (id1,_) id2 -> IdMap.add id1 id2 reidmap)
 	IdMap.empty nc.nc_node.tn_output nc.nc_outs in
@@ -309,7 +320,7 @@ and compile_equations t_file compiled_nodes equations =
     (fun aux_decls (tp, term) ->
 	  let term, aux_decls = separate_formulas_in_term aux_decls term in
 	  (tp, term), aux_decls)
-	aux_decls tpatt_term_couples1 in
+	[] tpatt_term_couples1 in
 	
   let own_decls, node_calls = separate_tuples t_file tpatt_term_couples2 aux_decls in
   
@@ -333,8 +344,11 @@ and compile_node t_file compiled_nodes node =
   
   
   
-let main t_file main_node_id =
-  let node = find_node t_file main_node_id in
+let main t_file main_node_name =
+  let node = 
+    try List.find (fun tn -> tn.tn_name.name = main_node_name) t_file
+	with Not_found -> assert false
+  in
   let output_id = match node.tn_input with
     | [(id, bty)] when bty = Tbool -> id
 	| _ -> assert false
