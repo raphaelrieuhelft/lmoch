@@ -15,6 +15,7 @@ let norm_only = ref false
 let lucy_printer = ref false
 let ocaml_printer = ref true
 let verbose = ref false
+let test_solver = ref false
 
 let spec =
   ["-parse-only", Arg.Set parse_only, "  stops after parsing";
@@ -22,6 +23,7 @@ let spec =
    "-norm-only", Arg.Set norm_only, "  stops after normalization";
    "-verbose", Arg.Set verbose, "print intermediate transformations";
    "-v", Arg.Set verbose, "print intermediate transformations";
+   "-test-solver", Arg.Set test_solver, "runs the solver on a fixed formula";
   ]
 
 let file, main_node =
@@ -54,6 +56,12 @@ let report_loc (b,e) =
   eprintf "File \"%s\", line %d, characters %d-%d:\n" file l fc lc
 
 let () =
+
+  if !test_solver then begin
+    K_ind_solver.main ();
+	exit 0
+  end;
+
   let c = open_in file in
   let lb = Lexing.from_channel c in
   try
@@ -75,7 +83,7 @@ let () =
 	let decls, output_id = Compile_to_aez.main ft main_node in
 	
       Format.printf "/**************************************/@.";
-      Format.printf "/* AEZ ast                            */@.";
+      Format.printf "/* AEZ formulas                       */@.";
       Format.printf "/**************************************/@.";
 	  Aez_printer.main decls output_id;
 	  
