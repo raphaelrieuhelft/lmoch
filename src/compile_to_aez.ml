@@ -359,7 +359,7 @@ let main t_file main_node_name =
 	| _ -> assert false
   in
   let decls, _ = compile_node t_file IdMap.empty node in
-  decls, output_id
+  decls, node.tn_input, output_id
 
 
 

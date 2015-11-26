@@ -80,14 +80,14 @@ let () =
 
 	
 	
-	let decls, output_id = Compile_to_aez.main ft main_node in
+	let decls, input_ids, output_id = Compile_to_aez.main ft main_node in
 	
       Format.printf "/**************************************/@.";
       Format.printf "/* AEZ formulas                       */@.";
       Format.printf "/**************************************/@.";
 	  Aez_printer.main decls output_id;
 	  
-	let () = Code_generation.main decls output_id in
+	let () = Code_generation.main decls input_ids output_id in
     (* XXX TODO XXX *)
     Format.printf "Don't know@.";
 

@@ -2,6 +2,8 @@ open Asttypes
 open Aez_ast
 open Format
 
+(*TODO : n-0 = n *)
+
 let str_base_type = function
   | Tbool -> "Type.type_bool"
   | Tint -> "Type.type_int"
@@ -71,9 +73,15 @@ and formula_make_lco ff = function
 let generate_declare_symbol ff decl =
   fprintf ff "let %a = declare_symbol \"%a\" [ Type.type_int ] %s@." pp_ident decl.sd_ident pp_ident decl.sd_ident (str_base_type decl.sd_type)
 
+let generate_declare_symbol_input ff (id, ty) =
+  fprintf ff "let %a = declare_symbol \"%a\" [ Type.type_int ] %s@." pp_ident id pp_ident id (str_base_type ty)
+  
 let generate_declare_symbols ff =
   List.iter (generate_declare_symbol ff)
 
+let generate_declare_symbols_inputs ff =   
+  List.iter (generate_declare_symbol_input ff)
+  
 let generate_stream_decl ff sd =
   fprintf ff "let def_%a n =@." pp_ident sd.sd_ident;
   begin 
@@ -105,9 +113,10 @@ let pp_def_names ff decls =
   in
   aux decls
  
-let main decls out_id =
+let main decls input_ids out_id =
   let ff = std_formatter in
   generate_declare_symbols ff decls;
+  generate_declare_symbols_inputs ff input_ids;
   generate_stream_decls ff decls;
   fprintf ff "let delta_incr n = Formula.make Formula.And [ %a ]@." pp_def_names decls;
   fprintf ff "let p_incr n = %a@." pp_formula (F_term (T_app (out_id, 0)));
