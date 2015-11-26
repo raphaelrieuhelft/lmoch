@@ -19,7 +19,7 @@ let make =
 let compare = Pervasives.compare
 
 let print fmt x =
-  Format.fprintf fmt "%s__%i" x.name x.id
+  Format.fprintf fmt "%s__%i" (String.lowercase x.name) x.id	(*grr*)
 
 (* Utils *)
 let print_to_string print x =
