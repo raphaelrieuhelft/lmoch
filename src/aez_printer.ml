@@ -1,15 +1,9 @@
-open Ident
 open Asttypes
 open Aez_ast
 
-let spf = Format.sprintf
+let fprintf = Format.fprintf
 
-let str_ident ident = spf "%s__%i" ident.name ident.id
 
-let str_constant = function
-  | Cbool b -> spf "%b" b
-  | Cint n -> spf "%i" n
-  | Creal x -> spf "%f" x
 
 let str_term_operator = function
   | TO_plus -> "+"
@@ -30,42 +24,51 @@ let str_logic_connector = function
   | LC_impl -> "==>"
   | LC_not -> "not"
 
-let rec str_term = function
-  | T_cst c -> str_constant c
+let pp_constant ff = function
+  | Cbool b -> fprintf ff "%b" b
+  | Cint n -> fprintf ff "%i" n
+  | Creal x -> fprintf ff "%f" x
+
+let rec pp_term ff = function
+  | T_cst c -> pp_constant ff c
   | T_op (op, t1, t2) ->
-    spf "(%s %s %s)" (str_term t1) (str_term_operator op) (str_term t2)
+    fprintf ff "(%a %s %a)" pp_term t1 (str_term_operator op) pp_term t2
   | T_ite (f, t1, t2) ->
-    (*spf "ite(%s, %s, %s)" (str_formula f) (str_term t1) (str_term t2)*)
-	spf "(if %s then %s else %s)" (str_formula f) (str_term t1) (str_term t2)
+	fprintf ff "(if %a then %a else %a)" pp_formula f pp_term t1 pp_term t2
   | T_app (id, k) -> 
-    if k = 0 then spf "%s(n)" (str_ident id)
-	else spf "%s(n-%i)" (str_ident id) k
+    if k = 0 then fprintf ff "%a(n)" Ident.print id
+	else fprintf ff "%a(n-%i)" Ident.print id k
   | T_formula _ | T_tuple _ | T_app_node _ -> assert false
   
-and str_formula = function
-  | F_term t -> str_term t
+and pp_formula ff = function
+  | F_term t -> pp_term ff t
   | F_cmp (cmp, t1, t2) -> 
-    spf "(%s %s %s)" (str_term t1) (str_comparison cmp) (str_term t2)
-  | F_time_eq k -> spf "n=%i" k
+    fprintf ff "(%a %s %a)" pp_term t1 (str_comparison cmp) pp_term t2
+  | F_time_eq k -> fprintf ff "n=%i" k
   | F_lco (lco, [f1; f2]) -> 
-    spf "(%s %s %s)" (str_formula f1) (str_logic_connector lco) (str_formula f2)
-  | F_lco (LC_not, [f]) -> spf "not (%s)" (str_formula f)
-  | F_lco (lco, f::fs) ->
-    spf "(%s) %s %s" (str_formula f) (str_logic_connector lco) (str_formula (F_lco (lco, fs)))
+    fprintf ff "(%a %s %a)" pp_formula f1 (str_logic_connector lco) pp_formula f2
+  | F_lco (LC_not, [f]) -> fprintf ff "not (%a)" pp_formula f
+  | F_lco (LC_and, fs) ->
+    let rec pp_fs ff = function
+	  | [] -> fprintf ff ""
+	  | f::fs -> fprintf ff "%a; %a" pp_formula f pp_fs fs
+	in
+    fprintf ff "&&list [ %a ]" pp_fs fs
   | F_lco _ -> assert false
-  (*| F_lco (lco, []) -> spf "%s([])" (str_logic_connector lco)
-  | F_lco (lco, [f]) -> spf "%s(%s)" (str_logic_connector lco) (str_formula f)*)
+  (*| F_lco (lco, []) -> fprintf ff "%s([])" (str_logic_connector lco)
+  | F_lco (lco, [f]) -> fprintf ff "%s(%s)" (str_logic_connector lco) (str_formula f)*)
 
-let str_stream_declaration decl = 
-  let s_id = str_ident decl.sd_ident in
+let pp_stream_declaration ff decl = 
+  let pp_id ff () = Ident.print ff decl.sd_ident in
   match decl.sd_body with
-  | SB_term t -> spf "%s  =  %s" s_id (str_term t)
-  | SB_formula f ->
-    let s_f = str_formula f in
-	spf "(%s  ==>  %s)  &&  (%s  ==>  %s)" s_id s_f s_f s_id
+    | SB_term t -> fprintf ff "%a(n)  =  %a" pp_id () pp_term t
+    | SB_formula f ->
+      let pp_f ff () = pp_formula ff f in
+	  fprintf ff "(%a(n)  ==>  %a)  &&  (%a  ==>  %a(n))" pp_id () pp_f () pp_f () pp_id ()
 
 
 let main decls out_id =
-  Format.printf "Boolean output: %s@." (str_ident out_id);
-  List.iter (fun decl -> Format.printf "  %s@." (str_stream_declaration decl)) decls;
-  Format.printf "@."
+  let ff = Format.std_formatter in
+  Format.fprintf ff "Output to check: %a@." Ident.print out_id;
+  List.iter (fun decl -> fprintf ff "  %a@." pp_stream_declaration decl) decls;
+  Format.fprintf ff "@."
