@@ -1,0 +1,4 @@
+node check (in: bool) returns (check: bool);
+let
+  check = if (if in then true else true) then true else false;
+tel

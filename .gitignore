@@ -12,7 +12,6 @@ lmoch
 #build folders
 src/lmoch
 src/_build
-examples
 lib
 
 ignore-*

@@ -1,0 +1,12 @@
+node Id2 (in0:bool; in1: int) returns (out0:bool; out1: int);
+let
+  (out0, out1) = (in0, in1);
+tel
+
+node check () returns (check: bool);
+var a0: bool; a1: int;
+let
+  (a0, a1) = (true, 0) -> pre (Id2(a0, a1));
+--  check = a0 = true and a1 = 0;
+  check = (a0,a1) = (true,0);
+tel
