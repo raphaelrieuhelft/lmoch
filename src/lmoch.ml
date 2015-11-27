@@ -47,7 +47,7 @@ let file, main_node =
   in
   Arg.parse spec set usage;
   (match !file with Some f -> f | None -> Arg.usage spec usage; exit 1),
-  (match !main with Some n -> n | None -> Arg.usage spec usage; exit 1)
+  (match !main with Some n -> n | None -> Format.printf "No main node specified: set to \"check\" by default.@.@."; "check")
 
 let report_loc (b,e) =
   let l = b.pos_lnum in
@@ -80,14 +80,14 @@ let () =
 
 	
 	
-	let decls, input_ids, output_id = Compile_to_aez.main ft main_node in
+	let decls, input_tvars, output_id = Compile_to_aez.main ft main_node in
 	
       Format.printf "/**************************************/@.";
       Format.printf "/* AEZ formulas                       */@.";
       Format.printf "/**************************************/@.";
-	  Aez_printer.main decls output_id;
+	  Aez_printer.main decls input_tvars output_id;
 	  
-	let () = Code_generation.main decls input_ids output_id in
+	let () = Code_generation.main decls input_tvars output_id in
     (* XXX TODO XXX *)
     Format.printf "Don't know@.";
 
