@@ -41,33 +41,37 @@ let term_make_cst ff = function
 	|Cbool true -> fprintf ff "Term.t_true"
 	|Cbool false -> fprintf ff "Term.t_false"
 	
-let rec pp_term ff = function
+let rec pp_term indent ff = function
 	|T_cst c -> term_make_cst ff c
-	|T_op (op, t1, t2) -> term_make_arith ff (op, t1, t2)
-	|T_ite (f, t1, t2) -> term_make_ite ff (f, t1, t2)
-	|T_app (id, k) -> term_make_app_k ff (id, k)
+	|T_op (op, t1, t2) -> term_make_arith indent ff (op, t1, t2)
+	|T_ite (f, t1, t2) -> term_make_ite indent ff (f, t1, t2)
+	|T_app (id, k) -> term_make_app_k indent ff (id, k)
 	|_-> assert false (*other cases are eliminated in compile_to_aez*)
 
 
-and term_make_arith ff (op, t1, t2) = fprintf ff "Term.make_arith %s (%a) (%a)" (op_string op) pp_term t1 pp_term t2
+and term_make_arith indent ff (op, t1, t2) = fprintf ff "Term.make_arith %s (%a) (%a)" (op_string op) (pp_term indent) t1 (pp_term indent) t2
 
-and term_make_ite ff (f, t1, t2) = fprintf ff "Term.make_ite@.  (%a)@.  (%a)@.  (%a)" pp_formula f pp_term t1 pp_term t2
+and term_make_ite indent ff (f, t1, t2) = 
+  let indent = indent^"  " in
+  fprintf ff "Term.make_ite@.%s(%a)@.%s(%a)@.%s(%a)@.%s" indent (pp_formula indent) f indent (pp_term indent) t1 indent (pp_term indent) t2 indent
 
-and term_make_app_k ff (id, k) = fprintf ff "Term.make_app %a@.  [ Term.make_arith Term.Minus n (Term.make_int (Num.Int %i)) ]" pp_ident id k
+and term_make_app_k indent ff (id, k) = 
+  let indent = indent^"  " in
+  fprintf ff "Term.make_app %a@.%s[ Term.make_arith Term.Minus n (Term.make_int (Num.Int %i)) ]@.%s" pp_ident id indent k indent
 
-and pp_formula ff = function
-	|F_term t -> pp_formula ff (F_cmp (Cmp_eq, t, T_cst(Cbool true)))
-	|F_cmp (comp, t1, t2) -> formula_make_lit ff (comp, t1, t2)
+and pp_formula indent ff = function
+	|F_term t -> pp_formula indent ff (F_cmp (Cmp_eq, t, T_cst(Cbool true)))
+	|F_cmp (comp, t1, t2) -> formula_make_lit indent ff (comp, t1, t2)
 	|F_time_eq k -> formula_time_eq ff k
-	|F_lco (lc, fl) -> formula_make_lco ff (lc, fl)
+	|F_lco (lc, fl) -> formula_make_lco indent ff (lc, fl)
 	
-and formula_make_lit ff (comp, t1, t2) = fprintf ff "Formula.make_lit %s [ %a; %a ]" (comp_string comp) pp_term t1 pp_term t2
+and formula_make_lit indent ff (comp, t1, t2) = fprintf ff "Formula.make_lit %s [ %a; %a ]" (comp_string comp) (pp_term indent) t1 (pp_term indent) t2
 
 and formula_time_eq ff k = fprintf ff "Formula.make_lit Formula.Eq [ n; %a ]" term_make_int k
 
-and formula_make_lco ff = function
-	|LC_not, [f] -> fprintf ff "Formula.make Formula.Not [ %a ]" pp_formula f
-	|lc, [f1; f2] -> fprintf ff "Formula.make %s [ %a; %a ]" (lco_string lc) pp_formula f1 pp_formula f2
+and formula_make_lco indent ff = function
+	|LC_not, [f] -> fprintf ff "Formula.make Formula.Not [ %a ]" (pp_formula indent) f
+	|lc, [f1; f2] -> fprintf ff "Formula.make %s [ %a; %a ]" (lco_string lc) (pp_formula indent) f1 (pp_formula indent) f2
 	|_-> assert false
 
 let generate_declare_symbol ff decl =
@@ -84,15 +88,16 @@ let generate_declare_symbols_inputs ff =
   
 let generate_stream_decl ff sd =
   fprintf ff "let def_%a n =@." pp_ident sd.sd_ident;
+  let indent = "  " in
   begin 
   match sd.sd_body with
 	|SB_term t -> begin 
-		fprintf ff "  let %a_term = %a@.  in@." pp_ident sd.sd_ident pp_term t;
-		fprintf ff "  Formula.make_lit Formula.Eq [ %a; %a_term ]@." pp_term (T_app(sd.sd_ident, 0)) pp_ident sd.sd_ident
+		fprintf ff "  let %a_term = %a@.  in@." pp_ident sd.sd_ident (pp_term indent) t;
+		fprintf ff "  Formula.make_lit Formula.Eq [ %a; %a_term ]@." (pp_term indent) (T_app(sd.sd_ident, 0)) pp_ident sd.sd_ident
 		end
 	|SB_formula f -> begin
-		fprintf ff "  let %a_n = %a@.  in@." pp_ident sd.sd_ident pp_formula (F_term (T_app (sd.sd_ident, 0)));
-		fprintf ff "  let %a_formula = %a@.  in@." pp_ident sd.sd_ident pp_formula f;
+		fprintf ff "  let %a_n = %a@.  in@." pp_ident sd.sd_ident (pp_formula indent) (F_term (T_app (sd.sd_ident, 0)));
+		fprintf ff "  let %a_formula = %a@.  in@." pp_ident sd.sd_ident (pp_formula indent) f;
 		fprintf ff "  Formula.make Formula.And [@.";
 		fprintf ff "    Formula.make Formula.Imp [ %a_n; %a_formula ];@." pp_ident sd.sd_ident pp_ident sd.sd_ident;
 		fprintf ff "    Formula.make Formula.Imp [ %a_formula; %a_n ]@." pp_ident sd.sd_ident pp_ident sd.sd_ident;
@@ -119,6 +124,6 @@ let main decls input_ids out_id =
   generate_declare_symbols_inputs ff input_ids;
   generate_stream_decls ff decls;
   fprintf ff "let delta_incr n = Formula.make Formula.And [ %a ]@." pp_def_names decls;
-  fprintf ff "let p_incr n = %a@." pp_formula (F_term (T_app (out_id, 0)));
+  fprintf ff "let p_incr n = %a@." (pp_formula "  ") (F_term (T_app (out_id, 0)));
   fprintf ff "let main () = kind delta_incr p_incr@."; 
   fprintf ff "@."

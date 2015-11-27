@@ -14,3 +14,5 @@ src/lmoch
 src/_build
 examples
 lib
+
+ignore-*

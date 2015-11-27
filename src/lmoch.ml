@@ -81,11 +81,12 @@ let () =
 	
 	
 	let decls, input_tvars, output_id = Compile_to_aez.main ft main_node in
-	
+	if !verbose then begin
       Format.printf "/**************************************/@.";
       Format.printf "/* AEZ formulas                       */@.";
       Format.printf "/**************************************/@.";
 	  Aez_printer.main decls input_tvars output_id;
+	end;
 	  
 	let () = Code_generation.main decls input_tvars output_id in
     (* XXX TODO XXX *)
