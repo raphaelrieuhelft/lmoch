@@ -8,6 +8,8 @@
 *.cmxs
 *.cmxa
 lmoch
+proofs/*_proof
+proofs/_build
 
 #build folders
 src/lmoch

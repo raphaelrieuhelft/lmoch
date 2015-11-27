@@ -113,12 +113,11 @@ let pp_def_names ff decls =
   in
   aux decls
  
-let main decls input_ids out_id =
-  let ff = std_formatter in
+let main ff decls input_ids out_id =
   generate_declare_symbols ff decls;
   generate_declare_symbols_inputs ff input_ids;
   generate_stream_decls ff decls;
   fprintf ff "let delta_incr n = Formula.make Formula.And [ %a ]@." pp_def_names decls;
   fprintf ff "let p_incr n = %a@." pp_formula (F_term (T_app (out_id, 0)));
-  fprintf ff "let main () = kind delta_incr p_incr@."; 
+  fprintf ff "let () = kind delta_incr p_incr@."; 
   fprintf ff "@."
