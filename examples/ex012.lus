@@ -1,0 +1,50 @@
+node xor (a, b: bool) returns (out: bool);
+let
+  out = if a and b then false else a or b;
+tel
+
+node HalfAdder (a, b : bool) returns (sum, carry : bool);
+let
+  sum = xor(a, b);
+  carry = a and b;
+tel
+
+node FullAdder (a, b, c : bool) returns (sum, carry : bool);
+var s1,c1,c2:bool;
+let
+  (s1, c1) = HalfAdder (a, b);
+  (sum, c2) = HalfAdder (c, s1);
+  carry = c1 or c2;
+tel
+
+node Add4 (a0, a1, a2, a3, b0, b1, b2, b3, c: bool) returns (out0, out1, out2, out3: bool);
+var c0, c1, c2, c3 : bool;
+let
+  (out0, c0) = FullAdder(a0, b0, c);
+  (out1, c1) = FullAdder(a1, b1, c0);
+  (out2, c2) = FullAdder(a2, b2, c1);
+  (out3, c3) = FullAdder(a3, b3, c2);
+tel
+
+node Inc4 (x0, x1, x2, x3: bool) returns (out0, out1, out2, out3: bool);
+let
+  (out0, out1, out2, out3) = Add4(x0, x1, x2, x3, true, false, false, false, false);
+tel
+
+node int_of_bit(x: bool) returns (out: int);
+let
+  out = if x then 1 else 0;
+tel
+
+node int_of_4bits(x0, x1, x2, x3: bool) returns (out: int);
+let
+  out = int_of_bit(x0) + 2 * (int_of_bit(x1) + 2 * (int_of_bit(x2) + 2 * int_of_bit(x3)));
+tel
+
+node check () returns (ok: bool);
+var cpt: int; x0, x1, x2, x3: bool;
+let
+  cpt = 0 -> pre cpt + 1;
+  (x0, x1, x2, x3) = (false, false, false, false) -> pre (Inc4(x0, x1, x2, x3));
+  ok = cpt = int_of_4bits(x0, x1, x2, x3);
+tel

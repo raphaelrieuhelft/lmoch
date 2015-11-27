@@ -67,8 +67,18 @@ let pp_stream_declaration ff decl =
 	  fprintf ff "(%a(n)  ==>  %a)  &&  (%a  ==>  %a(n))" pp_id () pp_f () pp_f () pp_id ()
 
 
-let main decls out_id =
+let str_base_type = function
+  | Tbool -> "bool"
+  | Tint -> "int"
+  | Treal -> "float"
+let pp_input_tvars ff input_tvars =
+  Format.fprintf ff "Inputs:";
+  List.iter (fun (id, bty) -> Format.fprintf ff " %a: %s;" Ident.print id (str_base_type bty)) input_tvars;
+  Format.fprintf ff "@."
+
+let main decls input_tvars out_id =
   let ff = Format.std_formatter in
   Format.fprintf ff "Output to check: %a@." Ident.print out_id;
+  pp_input_tvars ff input_tvars;
   List.iter (fun decl -> fprintf ff "  %a@." pp_stream_declaration decl) decls;
   Format.fprintf ff "@."

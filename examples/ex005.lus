@@ -1,0 +1,21 @@
+-- from TD
+
+node Mux (a, b, sel: bool) returns (out: bool);
+let
+  out = if sel then b else a;
+tel
+
+node DMux (in, sel: bool) returns (a, b: bool);
+let
+  (a, b) = if sel then (false, in) else (in, false);
+tel
+
+-- node check_mux_dmux in TD
+node check (in, sel: bool) returns (check: bool);
+var a, b, out: bool;
+let
+  (a, b) = DMux(in, sel);
+  out = Mux(a, b, sel);
+  check = (out = in);
+tel
+-- a and sel or not sel and b

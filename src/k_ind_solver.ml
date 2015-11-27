@@ -48,7 +48,3 @@ let kind delta_incr p_incr =
 	    Format.printf "FALSE PROPERTY@.";
 		Format.printf "Base case failed for n = %i.@." k
 
-
-
-
-

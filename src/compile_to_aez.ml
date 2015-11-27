@@ -203,17 +203,17 @@ let separate_tuples t_file tpatt_term_couples aux_decls =
   and handle_formula node_calls formula = match formula with
     | F_term t ->
 	  let ts, node_calls = handle_term node_calls t in
-	  (match ts with
-	    | [t] -> F_term t
-		| _ -> F_lco (LC_and, List.map (fun t -> F_term t) ts)
-		), node_calls
+	  begin match ts with
+	    | [t] -> F_term t, node_calls
+		| _ -> assert false
+	  end
 	| F_cmp (cmp, t1, t2) ->
 	  let ts1, node_calls = handle_term node_calls t1 in
 	  let ts2, node_calls = handle_term node_calls t2 in
-	  (match ts1, ts2 with
+	  begin match ts1, ts2 with
 	    | [t1], [t2] -> F_cmp (cmp, t1, t2)
 	    | _ -> F_lco (LC_and, List.map2 (fun t1 t2 -> F_cmp (cmp, t1, t2)) ts1 ts2)
-		), node_calls
+	  end, node_calls
 	| F_time_eq _ -> formula, node_calls
 	| F_lco (lco, fs) ->
 	  let fs, node_calls = map_fold handle_formula node_calls fs in

@@ -1,0 +1,7 @@
+node check () returns (OK: bool);
+var n1, n2: int;
+let
+  n1 = 0 -> pre n1 + 1;
+  n2 = 0 -> pre (1 -> pre (n2 + 2));
+  OK = n1 = n2;
+tel

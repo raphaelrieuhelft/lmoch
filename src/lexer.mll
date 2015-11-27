@@ -55,8 +55,8 @@ rule token = parse
       { newline lexbuf; token lexbuf }
   | [' ' '\t' '\r']+
       { token lexbuf }
-  | "--" [^ '\n']* ['\n']
-      { newline lexbuf; token lexbuf }
+  | "--"
+      { line_comment lexbuf }
   | "/*"
       { comment lexbuf; token lexbuf }
   | ident
@@ -109,3 +109,8 @@ and comment = parse
   | '\n' { newline lexbuf; comment lexbuf }
   | _    { comment lexbuf }
   | eof  { raise (Lexical_error "unterminated comment") }
+
+and line_comment = parse
+  | '\n' { newline lexbuf; token lexbuf }
+  | _    { line_comment lexbuf }
+  | eof  { EOF }
