@@ -88,6 +88,7 @@ let generate_declare_symbols_inputs ff =
   
 let generate_stream_decl ff sd =
   fprintf ff "let def_%a n =@." pp_ident sd.sd_ident;
+  fprintf ff "  (*  %a  *)@." Aez_printer.pp_stream_declaration sd;
   let indent = "  " in
   begin 
   match sd.sd_body with
