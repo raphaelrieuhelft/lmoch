@@ -55,8 +55,9 @@ let n2__5 = declare_symbol "n2__5" [ Type.type_int ] Type.type_int
 let ok__3 = declare_symbol "ok__3" [ Type.type_int ] Type.type_bool
 let aux__8 = declare_symbol "aux__8" [ Type.type_int ] Type.type_bool
 let x__6 = declare_symbol "x__6" [ Type.type_int ] Type.type_bool
+
+(*  n1__4(n)  =  (if n=0 then 0 else (n1__4(n-1) + 1))  *)
 let def_n1__4 n =
-  (*  n1__4(n)  =  (if n=0 then 0 else (n1__4(n-1) + 1))  *)
   let n1__4_term = Term.make_ite
     (Formula.make_lit Formula.Eq [ n; Term.make_int (Num.Int 0) ])
     (Term.make_int (Num.Int 0))
@@ -68,8 +69,9 @@ let def_n1__4 n =
   Formula.make_lit Formula.Eq [ Term.make_app n1__4
     [ Term.make_arith Term.Minus n (Term.make_int (Num.Int 0)) ]
     ; n1__4_term ]
+
+(*  n2__5(n)  =  (if n=0 then 0 else (if n=0 then 1 else (n2__5(n-1) + 1)))  *)
 let def_n2__5 n =
-  (*  n2__5(n)  =  (if n=0 then 0 else (if n=0 then 1 else (n2__5(n-1) + 1)))  *)
   let n2__5_term = Term.make_ite
     (Formula.make_lit Formula.Eq [ n; Term.make_int (Num.Int 0) ])
     (Term.make_int (Num.Int 0))
@@ -85,8 +87,9 @@ let def_n2__5 n =
   Formula.make_lit Formula.Eq [ Term.make_app n2__5
     [ Term.make_arith Term.Minus n (Term.make_int (Num.Int 0)) ]
     ; n2__5_term ]
+
+(*  ok__3(n)  =  aux__8(n)  *)
 let def_ok__3 n =
-  (*  ok__3(n)  =  aux__8(n)  *)
   let ok__3_term = Term.make_app aux__8
     [ Term.make_arith Term.Minus n (Term.make_int (Num.Int 0)) ]
     
@@ -94,8 +97,9 @@ let def_ok__3 n =
   Formula.make_lit Formula.Eq [ Term.make_app ok__3
     [ Term.make_arith Term.Minus n (Term.make_int (Num.Int 0)) ]
     ; ok__3_term ]
+
+(*  (aux__8(n)  ==>  (n1__4(n) = n2__5(n)))  &&  ((n1__4(n) = n2__5(n))  ==>  aux__8(n))  *)
 let def_aux__8 n =
-  (*  (aux__8(n)  ==>  (n1__4(n) = n2__5(n)))  &&  ((n1__4(n) = n2__5(n))  ==>  aux__8(n))  *)
   let aux__8_n = Formula.make_lit Formula.Eq [ Term.make_app aux__8
     [ Term.make_arith Term.Minus n (Term.make_int (Num.Int 0)) ]
     ; Term.t_true ]

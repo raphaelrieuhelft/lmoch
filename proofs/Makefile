@@ -4,8 +4,9 @@ OCAMLBUILD= ocamlbuild -no-links -classic-display \
 		-lflags "-I ../../lib/aez-0.3" \
 		-tags debug,annot
 
+NAME = ex012_check2_proof
 all: main
-	cp _build/ex001_proof.byte ex001_proof
+	cp _build/$(NAME).byte $(NAME)
 	
 main: 
-	$(OCAMLBUILD) ex001_proof.byte
+	$(OCAMLBUILD) $(NAME).byte

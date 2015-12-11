@@ -2,6 +2,8 @@ open Asttypes
 open Aez_ast
 open Format
 
+let kind_solver = "k_ind_solver.ml"
+
 (*TODO : n-0 = n *)
 
 let str_base_type = function
@@ -87,8 +89,8 @@ let generate_declare_symbols_inputs ff =
   List.iter (generate_declare_symbol_input ff)
   
 let generate_stream_decl ff sd =
+  fprintf ff "@.(*  %a  *)@." Aez_printer.pp_stream_declaration sd;
   fprintf ff "let def_%a n =@." pp_ident sd.sd_ident;
-  fprintf ff "  (*  %a  *)@." Aez_printer.pp_stream_declaration sd;
   let indent = "  " in
   begin 
   match sd.sd_body with
@@ -105,7 +107,7 @@ let generate_stream_decl ff sd =
 		fprintf ff "   ]@."
 	end
   ;
-  fprintf ff "@.@."
+  fprintf ff "@.@.@."
   end
 
   
@@ -119,11 +121,28 @@ let pp_def_names ff decls =
   in
   aux decls
  
-let main ff decls input_ids out_id =
+let pp_all ff decls input_tvars out_id =
   generate_declare_symbols ff decls;
-  generate_declare_symbols_inputs ff input_ids;
+  generate_declare_symbols_inputs ff input_tvars;
   generate_stream_decls ff decls;
-  fprintf ff "let delta_incr n = Formula.make Formula.And [ %a ]@." pp_def_names decls;
-  fprintf ff "let p_incr n = %a@." (pp_formula "  ") (F_term (T_app (out_id, 0)));
-  fprintf ff "let () = kind delta_incr p_incr@."; 
-  fprintf ff "@."
+  fprintf ff "let delta_incr n = Formula.make Formula.And [ %a ]@.@." pp_def_names decls;
+  fprintf ff "let p_incr n = %a@.@." (pp_formula "  ") (F_term (T_app (out_id, 0)));
+  fprintf ff "let () = kind delta_incr p_incr@."
+  
+  
+let main fileto decls input_tvars output_id =
+  let rm_command = "rm "^fileto in
+  ignore (Unix.system rm_command);
+  let command = "cp "^kind_solver^" "^fileto in
+  ignore (Unix.system command);
+  let fd = Unix.openfile fileto [Unix.O_RDWR; Unix.O_APPEND] 0o640 in
+  ignore (Unix.lseek fd 0 Unix.SEEK_END);
+  let oc = Unix.out_channel_of_descr fd in
+  let ff = Format.formatter_of_out_channel oc in
+  let () = pp_all ff decls input_tvars output_id in
+  Unix.close fd
+
+
+
+
+
