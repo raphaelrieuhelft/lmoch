@@ -18,18 +18,22 @@ try
 	let ok i = p_incr (Term.make_int (Num.Int i)) in
     let delta i = delta_incr (Term.make_int (Num.Int i)) in
 	let bmc k =
+		Format.printf "base case for n=%i...@?" k;
 		BMC_solver.assume ~id:0 (delta k);
-		if not (BMC_solver.entails ~id:0 (ok k)) then raise (FalseProperty k)
+		if not (BMC_solver.entails ~id:0 (ok k)) then raise (FalseProperty k);
+		Format.printf " ok@."
 	in
 	
 	let n = Term.make_app (declare_symbol "n" [] Type.type_int) [] in
 	let kind k =
+		Format.printf "%i-induction for n>%i...@?" k max_special_case;
 		let n_plus_k = Term.make_arith Term.Plus n (Term.make_int (Num.Int k)) in
 		Kind_solver.assume ~id:0 (delta_incr n_plus_k);
 		Kind_solver.check();
 		let p_n_plus_k = p_incr n_plus_k in
 		if Kind_solver.entails ~id:0 p_n_plus_k then raise (TrueProperty k);
-		Kind_solver.assume ~id:0 p_n_plus_k
+		Kind_solver.assume ~id:0 p_n_plus_k;
+		Format.printf " didn't work@."
 	in
 	
 	let rec loop k =
@@ -47,13 +51,13 @@ try
 	
 with 
 	  | TrueProperty k -> 
-	    Format.printf "TRUE PROPERTY@.";
+	    Format.printf "@.TRUE PROPERTY@.";
 		if k > 0 then
 			Format.printf "Proved with a %i-induction.@." k
 		else
 			Format.printf "Proved without the need for induction.@."
 	  | FalseProperty k -> 
-	    Format.printf "FALSE PROPERTY@.";
+	    Format.printf "@.FALSE PROPERTY@.";
 		Format.printf "Base case failed for n = %i.@." k
 
 

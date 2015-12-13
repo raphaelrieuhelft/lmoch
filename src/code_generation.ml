@@ -140,8 +140,6 @@ let pp_all ff decls input_tvars out_id =
   
   
 let main fileto decls input_tvars output_id =
-  let rm_command = "rm "^fileto in
-  ignore (Unix.system rm_command);
   let command = "cp "^kind_solver^" "^fileto in
   ignore (Unix.system command);
   let fd = Unix.openfile fileto [Unix.O_RDWR; Unix.O_APPEND] 0o640 in
