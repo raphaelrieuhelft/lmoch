@@ -1,0 +1,10 @@
+-- false property, first fails at time 4
+
+node check () returns (OK: bool);
+var n1, n2: int; b: bool;
+let
+  b = false -> true;
+  n1 = 0 -> pre n1 + 1;
+  n2 = 1 -> pre (1 -> n2 + pre n2);
+  OK = if b then n1 = n2 else true;
+tel

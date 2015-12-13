@@ -26,7 +26,7 @@ try
 	
 	let n = Term.make_app (declare_symbol "n" [] Type.type_int) [] in
 	let kind k =
-		Format.printf "%i-induction for n>%i...@?" k max_special_case;
+		Format.printf "%i-induction...@?" k;
 		let n_plus_k = Term.make_arith Term.Plus n (Term.make_int (Num.Int k)) in
 		Kind_solver.assume ~id:0 (delta_incr n_plus_k);
 		Kind_solver.check();
@@ -39,12 +39,12 @@ try
 	let rec loop k =
 		if k <= max_special_case then (bmc k; loop (k+1))
 	in loop 0;
-	
+	Format.printf "Now assuming n>%i for the induction.@." max_special_case;
 	Kind_solver.assume ~id:0 (Formula.make_lit Formula.Lt [Term.make_int (Num.Int max_special_case); n]);
 	
 	let rec loop k =
-		if k > max_special_case then bmc k;
 		kind k;
+		bmc (k+max_special_case+1);
 		loop (k+1)
 	in
 	loop 0
