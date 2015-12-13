@@ -83,7 +83,7 @@ let () =
 	end;
 
 	let proof_dir = "../proofs" in 
-	let proof_fname = (Filename.chop_suffix (Filename.basename file) ".lus")^(if main_node = "check" then "" else "_"^main_node)^("_proof.ml") in
+	let proof_fname = (Filename.chop_suffix (Filename.basename file) ".lus")^("_"^main_node)^("_proof.ml") in
 	let proof_path = proof_dir^"/"^proof_fname in
 	let () = Code_generation.main proof_path decls input_tvars output_id in
 	Format.printf "Proof written in %s@." proof_path;

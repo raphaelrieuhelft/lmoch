@@ -80,7 +80,7 @@ let rec compile_expr k expr = match expr.texpr_desc with
 	end
   
   | TE_app (ident, exprs) ->
-    let terms = List.map (compile_expr k) exprs in
+    let terms = List.map (compile_expr 0) exprs in
 	T_app_node (ident, k, terms)
   
   | TE_prim (_, [expr]) -> compile_expr k expr
