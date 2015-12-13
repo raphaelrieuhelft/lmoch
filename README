@@ -1,23 +1,24 @@
 Usage :
 
-./lmoch <fichier .lus cible> <noeud à vérifier (défaut : "check")> <options>
+./src/lmoch <fichier .lus cible> <noeud à vérifier (défaut : "check")> <options>
 
-Ceci compile le fichier cible en une preuve consistant en un programme Caml dont la seule dépendance est Alt-Ergo-Zero (présent dans le répertoire lib/aez-0.3). Si le fichier cible est <test>.lus, le fichier Caml est compilé à l'emplacement proofs/<test>_proof.ml. Le fichier compilé utilise Alt-Ergo-Zero pour essayer de prouver par k-induction que la sortie du noeud à vérifier est toujours vraie.
+Ceci compile le fichier cible en une preuve consistant en un programme Caml dont la seule dépendance est Alt-Ergo-Zero (présent dans le répertoire lib/aez-0.3). Si le fichier cible est <test>.lus avec le noeud <check> à vérifier, le fichier Caml est compilé à l'emplacement proofs/<test>_<check>_proof.ml. Le fichier compilé utilise Alt-Ergo-Zero pour essayer de prouver par k-induction que la sortie du noeud à vérifier est toujours vraie.
 
 Si le nom du noeud à vérifier n'est pas fourni, on essaie de vérifier le noeud "check" par défaut (nom utilisé dans tous nos exemples).
 
 Le fichier .ml peut ensuite être compilé (un Makefile est fourni dans le dossier proofs, on peut choisir la preuve à compiler avec la commande "make NAME=<nom de la preuve sans extension de fichier>"). cf option -run-proof pour éviter cette étape.
 
-Pour vérifier le noeud check du fichier examples/ex001.lus, un exemple complet d'utilisation est donc :
+Pour vérifier le noeud check du fichier examples/ex001.lus, un exemple complet d'utilisation est donc (en se plaçant dans le dossier src) :
 
-./lmoch examples/ex001.lus
-cd proofs
-make NAME=ex001
-./ex001_proof
+./lmoch ../examples/ex001.lus
+cd ../proofs
+make NAME=ex001_check
+./ex001_check_proof
 
-Options ajoutées/modifiées par rapport au code source fourni : 
 
+Option ajoutée par rapport au code source fourni : 
 	-run-proof compile et exécute immédiatement le fichier de preuve
+Option modifiée :
 	-verbose affiche aussi la formule décrivant l'état du système à l'instant n dans la syntaxe aez fournie dans l'énoncé en plus d'afficher le code source Lustre
 
 
@@ -32,31 +33,29 @@ Organisation :
 - code_generation.ml contient la génération du code Caml correspondant à la preuve, à partir de l'ast AEZ fourni par compile_to_aez.ml et en utilisant le solveur par k-induction.
 
 
-Réalisation :
+
+Choix technique : Le solveur par k-induction k_ind_solver.ml pourrait être ouvert par les fichiers de preuve en tant que dépendance, mais nous avons préféré recopier directement le code source de k_ind_solver.ml dans chaque fichier de preuve avant d'écrire le code généré qui dépend du fichier lustre en entrée. Ceci permet d'avoir des preuves en un seul fichier qui dépendent du solveur SMT Alt-Ergo-Zero mais pas de notre projet.
+
+
+
+Fonctionnement :
 
 
 La compilation de l'ast typé vers l'ast d'AEZ comporte plusieurs étapes et utilise des termes intermédiaires également définis dans aez_ast.ml.
 Etapes pour la compilation d'un noeud :
-- étape 1 : traduction vers l'ast d'AEZ la plus permissive au niveau des termes. "->" et "pre" disparaissent. A la place de "pre", on propage une variable "k" qui indique le décalage par rapport au présent : k=1 à l'intérieur d'un seul "pre", k=2 dans un "pre" imbriqué dans un autre, etc. Les variables deviennent des applications avec pour argument *n*-k, où *n* sera un terme global représentant le temps considéré (dans l'ast on retient seulement k). "e1 -> e2" devient "if *n*=k then e1 else e2".
-- étape 2 : élimination des termes consistant en une formule f, en ajoutant une nouvelle variable, par exemple aux : le terme est alors aux, et on ajoute une nouvelle déclaration exprimant que la formule réduite à aux doit être équivalente à f (en utilisant une double implication). 
-- étape 3 : élimination des tuples. Une déclaration (id1,...,idm)=(t1,...,tm) devient id1=t1, ... , idm=tm. Pour cela, certaines constructions comme if-then-else doivent être "distribuées" sur les tuples. Un appel de noeud n_id(t1,t2) devient (out1,out2) où out1 et out2 sont des nouvelles variables ; on retient t1, t2, out1, out2, qu'on utilise pour compiler à part un appel de noeud auxiliaire : on compile le noeud n_id, on renomme toutes ses variables pour éviter des conflits de noms, en nommant les variables de sortie out1 et out2 (les nouvelles variables choisies lors de l'appel du noeud), et si les 
+- étape 1 : traduction vers l'ast d'AEZ la plus permissive au niveau des termes. "->" et "pre" disparaissent. A la place de "pre", on propage une variable "k" qui indique le décalage par rapport au présent : k=1 à l'intérieur d'un seul "pre", k=2 dans un "pre" imbriqué dans un autre, etc. Les variables deviennent des applications (T_app) avec pour argument *n*-k, où *n* est le terme global représentant le temps (dans l'ast on retient seulement k). "e1 -> e2" devient "if *n*=k then e1 else e2". Les appels de noeuds (TE_app) reçoivent un constructeur provisoire T_app_node qui sera éliminé plus tard.
+- étape 2 : élimination des termes consistant en une formule f, en ajoutant une nouvelle variable, par exemple aux : le terme est alors aux, et on ajoute une nouvelle déclaration exprimant que la formule réduite à aux doit être équivalente à f (en utilisant une double implication).
+- étape 3 : élimination des tuples et des appels de noeuds. Une déclaration (id1,...,idm)=(t1,...,tm) devient id1=t1, ... , idm=tm. Pour cela, certaines constructions comme if-then-else doivent d'abord être "distribuées" sur les tuples. Un appel de noeud doit d'abord être remplacé par un tuple. Par exemple, si n_id est un noeud à 2 entrées et 2 sorties : n_id(t1,t2) devient (out1,out2) où out1 et out2 sont des nouvelles variables ; on retient t1, t2, out1, out2, qu'on utilise pour compiler à part un appel de noeud auxiliaire : on compile le noeud n_id, on renomme toutes ses variables pour éviter des conflits de noms, en nommant les variables de sortie out1 et out2 (les nouvelles variables choisies lors de l'appel du noeud), et si in1 et in2 sont les nouveaux noms des entrées, on ajoute des déclarations in1=t1 et in2=t2. Remarque : on mémoïse pour ne pas avoir à compiler plusieurs fois un même noeud, mais ses variables sont renommées différemment à chaque fois qu'il est appelé.
+
+
+Notre procédé de k-induction est très proche de celui décrit dans la thèse de George Hagen référencée dans l'énoncé. L'implémentation utilise Alt-Ergo-Zero et est très proche de l'exemple de l'énoncé : pour chaque variable, on définit une fonction Caml qui prend en argument le terme représentant le temps et renvoie le terme correspondant. La fonction kind effectue ensuite la k-induction.
 
 
 
+Extension :
 
+On tient compte de la profondeur maximale des flèches dans le code source Lustre pour simplifier l'induction au maximum : ainsi, si le noeud à vérifier a un comportement particulier pour n <= 3, on suppose n > 3 dans l'induction.
+Si a, b, c, d sont des variables, "a -> pre (b -> pre (c -> pre d))" est traduit en "if n=0 then a(n) else if n=1 then b(n-1) else if n=2 then c(n-2) else d(n-3)". Avoir un comportement particulier pour n <= 3 signifie que les conditions de if contiennent des "n = k" pour k jusqu'à 3.
+Cette optimisation assure que les conditions des ifs de cette forme sont toujours fausses dans l'induction.
+Pour que la k-induction reste correcte, on doit vérifier davantage de cas de base : ainsi, si on veut supposer n > 3 pour la k-induction, on doit par ailleurs vérifier que la propriété est vraie jusqu'au rang k+3. En effet, la k-induction consiste à montrer p(n), ... , p(n+k-1) ==> p(n+k) ; si on montre ceci seulement pour n > 3, le premier rang que l'hérédité puisse montrer est p(4+k).
 
-Choix techniques :
-
-- Le fichier compile_to_aez.ml contient la compilation de l'ast typé fourni dans typed_ast.ml vers l'ast d'Alt-Ergo-Zero décrit dans l'énoncé du projet, défini dans aez_ast.ml. Il y a plusieurs étapes, entre lesquelles on utilise des types
-
-- Le solveur par k-induction est le fichier src/k_ind_solver.ml. Les fichiers de preuve pourraient l'inclure en tant que dépendance, mais nous avons préféré inclure directement le code source de k_ind_solver dans chaque fichier de preuve : lmoch copie/colle le contenu de k_ind_solver avant d'écrire le code généré dans le fichier de preuve. Ceci permet d'avoir des preuves en un seul fichier qui dépendent du solveur SMT Alt-Ergo-Zero mais pas de notre projet.
-
-
-
-- On compile ensuite la syntaxe abstraite obtenue vers du code Caml qui définit les formules concernées dans Alt-Ergo-Zero et utilise le code de k_ind_solver.ml pour les vérifier.
-
-- Notre procédé de k-induction est très proche de celui décrit dans la thèse de George Hagen référencée dans l'énoncé. L'implémentation utilise Alt-Ergo-Zero et est très proche de l'exemple de l'énoncé : pour chaque variable, on définit une fonction Caml qui prend en argument le terme représentant le temps et renvoie le terme correspondant. La fonction kind effectue ensuite la k-induction.
-
-Extensions :
-
-On tient compte de la profondeur maximale des flèches dans le code source Lustre pour simplifier l'induction au maximum : ainsi, si le noeud à vérifier a un comportement particulier pour n<3, on commence l'induction en supposant n >= 3 (et on vérifie le cas de base jusqu'à n=3 pour préserver la correction). Dans le code généré, a -> b se traduit par un terme ite(n=0, a, b) : cette optimisation assure que les conditions de ces ifs sont toujours fausses dans le cas inductif.
