@@ -93,7 +93,7 @@ let () =
 		Format.printf "Running proof...@.@.";
 		let target_fname = (Filename.chop_suffix proof_fname ".ml")^(".byte") in
 		ignore (Unix.system ("cp "^proof_path ^" "^proof_fname));
-		let command = "ocamlbuild -no-links -classic-display -libs \"unix,nums,aez\" -cflags \"-I ../../lib/aez-0.3\" -lflags \"-I ../../lib/aez-0.3\" -tags \"debug,annot\" "^target_fname in(*extra quotes in libs and tags list seem needed...*)
+		let command = "ocamlbuild -no-links -classic-display -libs \"unix,nums,aez\" -cflags \"-I ../../lib/aez-0.3\" -lflags \"-I ../../lib/aez-0.3\" -tags \"debug,annot\" "^target_fname in
 		ignore (Unix.system command);
 		ignore (Unix.system ("ocamlrun "^("_build/"^target_fname)));
 		ignore (Unix.system ("rm "^proof_fname))
