@@ -1,0 +1,36 @@
+Usage :
+
+./lmoch <fichier .lus cible> <noeud à vérifier> <options>
+
+lmoch compile le fichier cible en un programme Caml dont la seule dépendance est Alt-Ergo-Zero (présent dans le répertoire lib/aez-0.3). Si le fichier cible est <test>.lus, le fichier Caml est compilé à l'emplacement proofs/<test>_proof.ml. Le fichier compilé utilise Alt-Ergo-Zero pour essayer de prouver par k-induction que la sortie du noeud à vérifier est toujours vraie.
+
+Le fichier .ml peut ensuite être compilé (un Makefile est fourni dans le dossier proofs, on peut choisir la preuve à compiler avec la commande "make NAME=<nom de la preuve sans extension de fichier>")
+
+Pour vérifier le noeud check du fichier examples/ex001.lus, un exemple complet d'utilisation est donc :
+
+./lmoch examples/ex001.lus
+cd proofs
+make NAME=ex001
+./ex001_proof
+
+Options ajoutées/modifiées par rapport au code source fourni : 
+
+	-run-proof compile et exécute immédiatement le fichier de preuve
+	-verbose affiche la formule décrivant l'état du système à l'instant n dans la syntaxe aez fournie dans l'énoncé en plus d'afficher le code source Lustre
+
+Si le nom du noeud à vérifier n'est pas fourni, on essaie de vérifier le noeud "check" s'il en existe un (c'est le cas pour tous nos exemples).
+
+
+Choix techniques :
+
+- Le solveur par k-induction est le fichier src/k_ind_solver.ml. Les fichiers de preuve pourraient l'inclure en tant que dépendance, mais nous avons préféré inclure directement le code source de k_ind_solver dans chaque fichier de preuve : lmoch copie/colle le contenu de k_ind_solver avant d'écrire le code généré dans le fichier de preuve. Ceci permet d'avoir des preuves en un seul fichier qui dépendent du solveur SMT Alt-Ergo-Zero mais pas de notre projet.
+
+- TODO dis moi tout ce que tu sais sur compile_to_aez
+
+- On compile ensuite la syntaxe abstraite obtenue vers du code Caml qui définit les formules concernées dans Alt-Ergo-Zero et utilise le code de k_ind_solver.ml pour les vérifier.
+
+- Notre procédé de k-induction est très proche de celui décrit dans la thèse de George Hagen référencée dans l'énoncé. L'implémentation utilise Alt-Ergo-Zero et est très proche de l'exemple de l'énoncé : pour chaque variable, on définit une fonction Caml qui prend en argument le terme représentant le temps et renvoie le terme correspondant. La fonction kind effectue ensuite la k-induction.
+
+Extensions :
+
+On tient compte de la profondeur maximale des flèches dans le code source Lustre pour simplifier l'induction au maximum : ainsi, si le noeud à vérifier a un comportement particulier pour n<3, on commence l'induction en supposant n >= 3 (et on vérifie le cas de base jusqu'à n=3 pour préserver la correction). Dans le code généré, a -> b se traduit par un terme ite(n=0, a, b) : cette optimisation assure que les conditions de ces ifs sont toujours fausses dans le cas inductif.
