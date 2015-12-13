@@ -1,10 +1,40 @@
--- false property, first fails at time 4
-
-node check () returns (OK: bool);
-var n1, n2: int; b: bool;
+node xor (a, b: bool) returns (out: bool);
 let
-  b = false -> true;
-  n1 = 0 -> pre n1 + 1;
-  n2 = 1 -> pre (1 -> n2 + pre n2);
-  OK = if b then n1 = n2 else true;
+  out = if a and b then false else a or b;
+tel
+
+node HalfAdder (a, b : bool) returns (sum, carry : bool);
+let
+  sum = xor(a, b);
+  carry = a and b;
+tel
+
+node FullAdder (a, b, c : bool) returns (sum, carry : bool);
+var s1,c1,c2:bool;
+let
+  (s1, c1) = HalfAdder (a, b);
+  (sum, c2) = HalfAdder (c, s1);
+  carry = c1 or c2;
+tel
+
+node check() returns (ok: bool);
+var s0, s1, s2, s3, s4, s5, s6, s7, c0, c1, c2, c3, c4, c5, c6, c7, b0, b1, b2, b3, b4, b5, b6, b7: bool;
+let
+  (s0, c0) = FullAdder(false,false,false);
+  b0 = (s0 = false) and (c0 = false);
+  (s1, c1) = FullAdder(false,false,true);
+  b1 = (s1 = true) and (c1 = false);
+  (s2, c2) = FullAdder(false,true,false);
+  b2 = (s2 = true) and (c2 = false);
+  (s3, c3) = FullAdder(true,false,false);
+  b3 = (s3 = true) and (c3 = false);
+  (s4, c4) = FullAdder(false,true,true);
+  b4 = (s4 = false) and (c4 = true);
+  (s5, c5) = FullAdder(true,false,true);
+  b5 = (s5 = false) and (c5 = true);
+  (s6, c6) = FullAdder(true,true,false);
+  b6 = (s6 = false) and (c6 = true);
+  (s7, c7) = FullAdder(true,true,true);
+  b7 = (s7 = true) and (c7 = true);
+  ok = b0 and b1 and b2 and b3 and b4 and b5 and b6 and b7;
 tel
