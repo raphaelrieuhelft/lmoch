@@ -1,10 +1,12 @@
 Usage :
 
-./lmoch <fichier .lus cible> <noeud à vérifier> <options>
+./lmoch <fichier .lus cible> <noeud à vérifier (défaut : "check")> <options>
 
-lmoch compile le fichier cible en un programme Caml dont la seule dépendance est Alt-Ergo-Zero (présent dans le répertoire lib/aez-0.3). Si le fichier cible est <test>.lus, le fichier Caml est compilé à l'emplacement proofs/<test>_proof.ml. Le fichier compilé utilise Alt-Ergo-Zero pour essayer de prouver par k-induction que la sortie du noeud à vérifier est toujours vraie.
+Ceci compile le fichier cible en une preuve consistant en un programme Caml dont la seule dépendance est Alt-Ergo-Zero (présent dans le répertoire lib/aez-0.3). Si le fichier cible est <test>.lus, le fichier Caml est compilé à l'emplacement proofs/<test>_proof.ml. Le fichier compilé utilise Alt-Ergo-Zero pour essayer de prouver par k-induction que la sortie du noeud à vérifier est toujours vraie.
 
-Le fichier .ml peut ensuite être compilé (un Makefile est fourni dans le dossier proofs, on peut choisir la preuve à compiler avec la commande "make NAME=<nom de la preuve sans extension de fichier>")
+Si le nom du noeud à vérifier n'est pas fourni, on essaie de vérifier le noeud "check" par défaut (nom utilisé dans tous nos exemples).
+
+Le fichier .ml peut ensuite être compilé (un Makefile est fourni dans le dossier proofs, on peut choisir la preuve à compiler avec la commande "make NAME=<nom de la preuve sans extension de fichier>"). cf option -run-proof pour éviter cette étape.
 
 Pour vérifier le noeud check du fichier examples/ex001.lus, un exemple complet d'utilisation est donc :
 
@@ -16,16 +18,40 @@ make NAME=ex001
 Options ajoutées/modifiées par rapport au code source fourni : 
 
 	-run-proof compile et exécute immédiatement le fichier de preuve
-	-verbose affiche la formule décrivant l'état du système à l'instant n dans la syntaxe aez fournie dans l'énoncé en plus d'afficher le code source Lustre
+	-verbose affiche aussi la formule décrivant l'état du système à l'instant n dans la syntaxe aez fournie dans l'énoncé en plus d'afficher le code source Lustre
 
-Si le nom du noeud à vérifier n'est pas fourni, on essaie de vérifier le noeud "check" s'il en existe un (c'est le cas pour tous nos exemples).
+
+
+
+Organisation :
+
+- compile_to_aez.ml contient la compilation de l'ast typé fourni dans typed_ast.ml vers des déclarations de termes et formules exprimés dans l'ast d'Alt-Ergo-Zero décrit dans l'énoncé du projet, défini dans aez_ast.ml.
+
+- k_ind_solver.ml contient le solveur par k-induction.
+
+- code_generation.ml contient la génération du code Caml correspondant à la preuve, à partir de l'ast AEZ fourni par compile_to_aez.ml et en utilisant le solveur par k-induction.
+
+
+Réalisation :
+
+
+La compilation de l'ast typé vers l'ast d'AEZ comporte plusieurs étapes et utilise des termes intermédiaires également définis dans aez_ast.ml.
+Etapes pour la compilation d'un noeud :
+- étape 1 : traduction vers l'ast d'AEZ la plus permissive au niveau des termes. "->" et "pre" disparaissent. A la place de "pre", on propage une variable "k" qui indique le décalage par rapport au présent : k=1 à l'intérieur d'un seul "pre", k=2 dans un "pre" imbriqué dans un autre, etc. Les variables deviennent des applications avec pour argument *n*-k, où *n* sera un terme global représentant le temps considéré (dans l'ast on retient seulement k). "e1 -> e2" devient "if *n*=k then e1 else e2".
+- étape 2 : élimination des termes consistant en une formule f, en ajoutant une nouvelle variable, par exemple aux : le terme est alors aux, et on ajoute une nouvelle déclaration exprimant que la formule réduite à aux doit être équivalente à f (en utilisant une double implication). 
+- étape 3 : élimination des tuples. Une déclaration (id1,...,idm)=(t1,...,tm) devient id1=t1, ... , idm=tm. Pour cela, certaines constructions comme if-then-else doivent être "distribuées" sur les tuples. Un appel de noeud n_id(t1,t2) devient (out1,out2) où out1 et out2 sont des nouvelles variables ; on retient t1, t2, out1, out2, qu'on utilise pour compiler à part un appel de noeud auxiliaire : on compile le noeud n_id, on renomme toutes ses variables pour éviter des conflits de noms, en nommant les variables de sortie out1 et out2 (les nouvelles variables choisies lors de l'appel du noeud), et si les 
+
+
+
 
 
 Choix techniques :
 
+- Le fichier compile_to_aez.ml contient la compilation de l'ast typé fourni dans typed_ast.ml vers l'ast d'Alt-Ergo-Zero décrit dans l'énoncé du projet, défini dans aez_ast.ml. Il y a plusieurs étapes, entre lesquelles on utilise des types
+
 - Le solveur par k-induction est le fichier src/k_ind_solver.ml. Les fichiers de preuve pourraient l'inclure en tant que dépendance, mais nous avons préféré inclure directement le code source de k_ind_solver dans chaque fichier de preuve : lmoch copie/colle le contenu de k_ind_solver avant d'écrire le code généré dans le fichier de preuve. Ceci permet d'avoir des preuves en un seul fichier qui dépendent du solveur SMT Alt-Ergo-Zero mais pas de notre projet.
 
-- TODO dis moi tout ce que tu sais sur compile_to_aez
+
 
 - On compile ensuite la syntaxe abstraite obtenue vers du code Caml qui définit les formules concernées dans Alt-Ergo-Zero et utilise le code de k_ind_solver.ml pour les vérifier.
 

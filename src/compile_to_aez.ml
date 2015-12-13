@@ -23,14 +23,14 @@ let rec list_map3 f l1 l2 l3 = match l1, l2, l3 with
 
 
 (* expr to term, including T_formula, T_tuple, T_app_node *)
-let rec compile_expr past expr = match expr.texpr_desc with
+let rec compile_expr k expr = match expr.texpr_desc with
 
   | TE_const c -> T_cst c
   
-  | TE_ident ident -> T_app (ident, past)
+  | TE_ident ident -> T_app (ident, k)
   
   | TE_op (op, exprs) ->
-    let terms = List.map (compile_expr past) exprs in
+    let terms = List.map (compile_expr k) exprs in
     begin
 	  match op with
 	    | Op_add | Op_sub | Op_mul | Op_div | Op_mod
@@ -80,21 +80,21 @@ let rec compile_expr past expr = match expr.texpr_desc with
 	end
   
   | TE_app (ident, exprs) ->
-    let terms = List.map (compile_expr past) exprs in
-	T_app_node (ident, past, terms)
+    let terms = List.map (compile_expr k) exprs in
+	T_app_node (ident, k, terms)
   
-  | TE_prim (_, [expr]) -> compile_expr past expr
+  | TE_prim (_, [expr]) -> compile_expr k expr
   | TE_prim _ -> assert false
   
   | TE_arrow (expr1, expr2) ->
-    let term1 = compile_expr past expr1 in
-	let term2 = compile_expr past expr2 in
-	T_ite (F_time_eq past, term1, term2)
+    let term1 = compile_expr k expr1 in
+	let term2 = compile_expr k expr2 in
+	T_ite (F_time_eq k, term1, term2)
 	
-  | TE_pre expr -> compile_expr (past+1) expr
+  | TE_pre expr -> compile_expr (k+1) expr
   
   | TE_tuple exprs -> 
-    let terms = List.map (compile_expr past) exprs in
+    let terms = List.map (compile_expr k) exprs in
 	T_tuple terms
 
 
@@ -125,9 +125,9 @@ let rec separate_formulas_in_term aux_decls term = match term with
   | T_tuple ts ->
     let ts, aux_decls = map_fold separate_formulas_in_term aux_decls ts in
 	T_tuple ts, aux_decls
-  | T_app_node (id, past, ts) ->
+  | T_app_node (id, k, ts) ->
     let ts, aux_decls = map_fold separate_formulas_in_term aux_decls ts in
-	T_app_node (id, past, ts), aux_decls
+	T_app_node (id, k, ts), aux_decls
   
 and separate_formulas_in_formula aux_decls formula = match formula with
   | F_term term -> (match term with
@@ -153,7 +153,7 @@ and separate_formulas_in_formula aux_decls formula = match formula with
 
 type node_call = {
   nc_node: t_node;
-  nc_past: int;
+  nc_k: int;
   nc_args: term list;
   nc_outs: ident list;
 }
@@ -173,10 +173,10 @@ let find_node t_file node_ident =
   
 let separate_tuples t_file tpatt_term_couples aux_decls =
 
-  let make_node_call ident past terms =
+  let make_node_call ident k terms =
     let node = find_node t_file ident in
 	let outs = List.map (fun (id,_) -> reid node.tn_name id) node.tn_output in
-	{ nc_node = node; nc_past = past; nc_args = terms; nc_outs = outs }
+	{ nc_node = node; nc_k = k; nc_args = terms; nc_outs = outs }
   in
   
   let rec handle_term node_calls term = match term with
@@ -195,10 +195,10 @@ let separate_tuples t_file tpatt_term_couples aux_decls =
 	| T_tuple ts ->
 	  let tss, node_calls = map_fold handle_term node_calls ts in
 	  List.map (function [t] -> t | _ -> assert false) tss, node_calls
-	| T_app_node (id, past, ts) ->
+	| T_app_node (id, k, ts) ->
 	  let tss, node_calls = map_fold handle_term node_calls ts in
-	  let nc = make_node_call id past (List.map (function [t] -> t | _ -> assert false) tss) in
-	  List.map (fun id -> T_app (id, past)) nc.nc_outs, nc::node_calls
+	  let nc = make_node_call id k (List.map (function [t] -> t | _ -> assert false) tss) in
+	  List.map (fun id -> T_app (id, k)) nc.nc_outs, nc::node_calls
 	  
   and handle_formula node_calls formula = match formula with
     | F_term t ->
@@ -264,9 +264,9 @@ let reid_decls node_id init_reidmap decls =
       let t1, reidmap = reid_term reidmap t1 in
 	  let t2, reidmap = reid_term reidmap t2 in
 	  T_ite (f, t1, t2), reidmap
-    | T_app (ident, past) ->
+    | T_app (ident, k) ->
       let ident, reidmap = reid_ident reidmap ident in
-	  T_app (ident, past), reidmap
+	  T_app (ident, k), reidmap
     | T_formula _ | T_tuple _ | T_app_node _ -> assert false
   and reid_formula reidmap formula = match formula with
     | F_term t ->
@@ -360,26 +360,5 @@ let main t_file main_node_name =
   in
   let decls, _ = compile_node t_file IdMap.empty node in
   decls, node.tn_input, output_id
-
-
-
-
-(* questions: 
-  tuple in tuple 
-  distribute op / conn over tuple
-*)
-
-(* examples: 
-  cf questions
-  call a node in the past -> ?
-  input of a node unused 
-*)
-
-(* remark: loops if there is a loop in node calls, assume checked by parser when giving ids to nodes *)
-
-
-
-
-
 
 
