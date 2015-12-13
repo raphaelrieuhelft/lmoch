@@ -8,8 +8,9 @@
 *.cmxs
 *.cmxa
 lmoch
-proofs/*_proof
-proofs/_build
+proofs/*
+!proofs/Makefile
+!proofs/proof_example.ml
 
 #build folders
 src/lmoch
