@@ -23,6 +23,7 @@ $(MAIN).byte: byte
 
 $(MAIN): $(MAIN).target
 	cp _build/$(MAIN).$(TARGET) $(MAIN)
+	cp $(MAIN) ../$(MAIN)
 
 $(MAIN).target:
 	$(OCAMLBUILD) $(MAIN).$(TARGET)

@@ -15,7 +15,6 @@ let norm_only = ref false
 let lucy_printer = ref false
 let ocaml_printer = ref true
 let verbose = ref false
-let test_solver = ref false
 let run_proof = ref false
 
 let spec =
@@ -24,7 +23,6 @@ let spec =
    "-norm-only", Arg.Set norm_only, "  stops after normalization";
    "-verbose", Arg.Set verbose, "print intermediate transformations";
    "-v", Arg.Set verbose, "print intermediate transformations";
-   "-test-solver", Arg.Set test_solver, "runs the solver on a fixed formula";
    "-run-proof", Arg.Set run_proof, "runs the computed proof immediately"
   ]
 
@@ -58,12 +56,6 @@ let report_loc (b,e) =
   eprintf "File \"%s\", line %d, characters %d-%d:\n" file l fc lc
 
 let () =
-(*
-  if !test_solver then begin
-    K_ind_solver.main ();
-	exit 0
-  end;
-*)
   let c = open_in file in
   let lb = Lexing.from_channel c in
   try

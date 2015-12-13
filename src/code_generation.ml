@@ -139,7 +139,10 @@ let main fileto decls input_tvars output_id =
   ignore (Unix.lseek fd 0 Unix.SEEK_END);
   let oc = Unix.out_channel_of_descr fd in
   let ff = Format.formatter_of_out_channel oc in
-  let () = pp_all ff decls input_tvars output_id in
+  Format.fprintf ff "(**************************)@.";
+  Format.fprintf ff "(** Begin generated code **)@.";
+  Format.fprintf ff "(**************************)@.@.@.@.";
+  pp_all ff decls input_tvars output_id;
   Unix.close fd
 
 
