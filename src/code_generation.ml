@@ -4,7 +4,10 @@ open Format
 
 let kind_solver = "k_ind_solver.ml"
 
-(*TODO : n-0 = n *)
+let max_special_case = ref 0
+let update_max_special_case k = if k > !max_special_case then max_special_case := k
+
+
 
 let str_base_type = function
   | Tbool -> "Type.type_bool"
@@ -58,8 +61,11 @@ and term_make_ite indent ff (f, t1, t2) =
   fprintf ff "Term.make_ite@.%s(%a)@.%s(%a)@.%s(%a)@.%s" indent (pp_formula indent) f indent (pp_term indent) t1 indent (pp_term indent) t2 indent
 
 and term_make_app_k indent ff (id, k) = 
-  let indent = indent^"  " in
-  fprintf ff "Term.make_app %a@.%s[ Term.make_arith Term.Minus n (Term.make_int (Num.Int %i)) ]@.%s" pp_ident id indent k indent
+	if k = 0 then
+		fprintf ff "Term.make_app %a [ n ]" pp_ident id
+	else
+		let indent = indent^"  " in
+		fprintf ff "Term.make_app %a@.%s[ Term.make_arith Term.Minus n (Term.make_int (Num.Int %i)) ]@.%s" pp_ident id indent k indent
 
 and pp_formula indent ff = function
 	|F_term t -> pp_formula indent ff (F_cmp (Cmp_eq, t, T_cst(Cbool true)))
@@ -69,7 +75,9 @@ and pp_formula indent ff = function
 	
 and formula_make_lit indent ff (comp, t1, t2) = fprintf ff "Formula.make_lit %s [ %a; %a ]" (comp_string comp) (pp_term indent) t1 (pp_term indent) t2
 
-and formula_time_eq ff k = fprintf ff "Formula.make_lit Formula.Eq [ n; %a ]" term_make_int k
+and formula_time_eq ff k =
+	update_max_special_case k;
+	fprintf ff "Formula.make_lit Formula.Eq [ n; %a ]" term_make_int k
 
 and formula_make_lco indent ff = function
 	|LC_not, [f] -> fprintf ff "Formula.make Formula.Not [ %a ]" (pp_formula indent) f
@@ -122,12 +130,13 @@ let pp_def_names ff decls =
   aux decls
  
 let pp_all ff decls input_tvars out_id =
+  max_special_case := 0;
   generate_declare_symbols ff decls;
   generate_declare_symbols_inputs ff input_tvars;
   generate_stream_decls ff decls;
   fprintf ff "let delta_incr n = Formula.make Formula.And [ %a ]@.@." pp_def_names decls;
   fprintf ff "let p_incr n = %a@.@." (pp_formula "  ") (F_term (T_app (out_id, 0)));
-  fprintf ff "let () = kind delta_incr p_incr@."
+  fprintf ff "let () = kind delta_incr p_incr %i@." !max_special_case
   
   
 let main fileto decls input_tvars output_id =

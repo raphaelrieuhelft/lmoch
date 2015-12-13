@@ -12,7 +12,7 @@ let declare_symbol name t_in t_out =
 	Symbol.declare x t_in t_out; (* declaration de son type *)
 	x
 
-let kind delta_incr p_incr (*max_depth*) =
+let kind delta_incr p_incr max_special_case =
 try
   
 	let ok i = p_incr (Term.make_int (Num.Int i)) in
@@ -31,15 +31,19 @@ try
 		if Kind_solver.entails ~id:0 p_n_plus_k then raise (TrueProperty k);
 		Kind_solver.assume ~id:0 p_n_plus_k
 	in
-			
+	
 	let rec loop k =
-		bmc k;
+		if k <= max_special_case then (bmc k; loop (k+1))
+	in loop 0;
+	
+	Kind_solver.assume ~id:0 (Formula.make_lit Formula.Lt [Term.make_int (Num.Int max_special_case); n]);
+	
+	let rec loop k =
+		if k > max_special_case then bmc k;
 		kind k;
 		loop (k+1)
 	in
 	loop 0
-	
-	(*Kind_solver.assume ~id:0 (Formula.make_lit Formula.Lt [Term.make_int (Num.Int 0); n]);*)
 	
 with 
 	  | TrueProperty k -> 
