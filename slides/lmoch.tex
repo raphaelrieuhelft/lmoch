@@ -99,6 +99,214 @@
 }
 
 \begin{document}
+
+
+\begin{frame}
+\frametitle{De l'ast typée fournie à l'ast d'AEZ}
+	
+	\begin{columns}[T]
+		\begin{column}{.5\linewidth}
+			$
+			\begin{array}{lll}
+				e\;::=&
+				\\
+					\;\;| \; c	
+				&	\text{constante}
+				\\
+					\;\;| \; x	
+				&	\text{variable}
+				\\
+					\;\;| \; op(e,...,e)
+				&	\text{opération}
+				\\
+					\;\;| \; nd(e,...,e)
+				&	\text{appel de noeud}
+				\\
+					\;\;| \; prim(e,...,e)
+				&	\text{primitive}
+				\\
+					\;\;| \; e\;\rightarrow\;e
+				&	%\text{opération arithmétique}
+				\\
+					\;\;| \; pre(e)
+				&	%\text{opération logique}
+				\\
+					\;\;| \; (e,...,e)
+				&	\text{tuple}
+			\end{array}
+			$	
+		
+		\end{column}
+		\begin{column}{.5\linewidth}
+		
+			
+%			\begin{tabular}{lll}
+%				$f$&::=&
+%				\\
+%				&	| $t$	&terme
+%				\\
+%				&	| $t$ cmp$t$ &\text{comparaison}
+%				\\
+%				&	| $f$ $op$ $f$
+%				&	opération logique
+%			\end{tabular}
+			
+			\def\tmpcolor{gray}
+			\def\newcolor{teal}
+			\def\oldcolor{purple}
+			
+			$
+			\begin{array}{lll}
+				t\;::=&
+				\\
+					\;\;| \; c	
+				&	\text{constante}
+				\\
+					\;\;| \; t\; op \; t 
+				&	\text{opération arithmétique}
+				\\
+					\;\;| \; ite(f,t,t)
+					%\text{it } f \text{ then } t \text{ else } t
+				&	\text{opération logique}
+				\\
+%				\onslide<1>{
+%					\;\;| \; varphi(t,...,t)
+%				&	\text{appel de fonction}
+%				}
+				\only<2->{
+					\textcolor{\oldcolor}
+					}{\;\;| \; \varphi(t,...,t)}
+				&	
+				\only<2->{
+					\textcolor{\oldcolor}
+					}{\text{appel de fonction}}
+				\\
+				\onslide<2->{
+					\textcolor{\newcolor}{\;\;| \; x(n-k)}
+				&	\textcolor{\newcolor}{\text{variable à un instant}}
+				}
+				\\
+				\onslide<2->{
+					\textcolor{\tmpcolor}{\;\;| \; f}
+				&	\textcolor{\tmpcolor}{\text{formule}}
+				}
+				\\
+				\onslide<2->{
+					\textcolor{\tmpcolor}{\;\;| \; (t,...,t)}
+				&	\textcolor{\tmpcolor}{\text{tuple}}
+				}
+				\\
+				\onslide<2->{
+					\textcolor{\tmpcolor}{\;\;| \; nd(t,...,t)}
+				&	\textcolor{\tmpcolor}{\text{appel de noeud}}
+				}
+			\end{array}
+			$
+			
+			\vspace{1em}
+									
+			$
+			\begin{array}{lll}
+				f\;::=&
+				\\
+					\;\;| \; t	
+				&	\text{terme}
+				\\
+					\;\;| \; t\; cmp \; t 
+				&	\text{comparaison}
+				\\
+					\;\;| \; f\;op\;f
+				&	\text{opération logique}
+				\\
+				\onslide<2->{
+					\textcolor{\newcolor}{\;\;| \; n=k}
+				&	\textcolor{\newcolor}{\text{temps = constante}}
+				}
+			\end{array}
+			$
+		
+		\
+		
+		\end{column}
+	\end{columns}
+	
+	
+\end{frame}
+\begin{frame}
+\frametitle{De l'ast typée fournie à l'ast d'AEZ}
+
+\begin{itemize}
+\item
+Étape 1 :
+changement d'ast, gestion de $\rightarrow$ et $pre$.
+
+\
+
+\item
+Étape 2 :
+élimination des termes réduits à une formule.
+
+\
+
+\item
+Étape 3 :
+élimination des tuples et appels de noeuds.
+\end{itemize}
+\end{frame}
+
+
+
+\begin{frame}
+\frametitle{Étape 1 : traduction, gestion de $\rightarrow$ et $pre$}
+	
+	$n$ : terme global représentant le temps
+	
+	\
+	
+	Objectif : \qquad $x\rightarrow pre \; y \qquad\longrightarrow\qquad \text{if }n=0 \text{ then } x(n) \text{ else } y(n-1)$
+	
+	\
+	
+	\
+	
+	On propage $k$, décalage par rapport à $n$ :
+%	$$pre(e),\;k \quad\longrightarrow\quad e,\;k+1$$
+	\vspace{-1em}
+	$$\Phi(pre(e),\;k) \qquad=\qquad \Phi(e,\;k+1)$$
+	
+	\
+	
+	Variables :
+	\vspace{-1em}
+	$$\Phi(x,\;k) \qquad=\qquad x(n-k)$$
+	
+	\
+	
+	$\rightarrow$ :
+	\vspace{-1em}
+	$$\Phi(e1\rightarrow e2, \;k) \qquad=\qquad \text{if }n=k \text{ then } \Phi(e1,\;k) \text{ else } \Phi(e2,\;k)$$
+	
+\end{frame}
+\begin{frame}
+\frametitle{Étape 2 :
+Élimination des termes réduits à une formule}
+	
+	$$f \qquad\longrightarrow\qquad aux$$
+
+	où $aux$ est une variable fraîche, en ajoutant la formule
+	
+	$$(aux \Rightarrow f) \quad \&\& \quad (f \Rightarrow aux)$$
+	
+	
+\end{frame}
+\begin{frame}
+\frametitle{Étape 3 :
+élimination des tuples et appels de noeuds}
+	
+\end{frame}
+
+
+
 \begin{frame}
 	\frametitle{Le procédé de $k$-induction}
 	Cas de base :	$$\Delta(0), \Delta(1), \ldots, \Delta(k) \models  P(0), P(1), \ldots,  P(k)$$
