@@ -87,14 +87,16 @@
 \begin{document}
 \begin{frame}
 	\frametitle{Le procédé de $k$-induction}
-	
-	$$\Delta(0), \Delta(1), \ldots, \Delta(k) \models P(0), P(1), \ldots, P(n)$$
-	$$\forall n>0, {\Delta(n), \ldots, \Delta(n+k), P(n), \ldots, P(n+k-1) \models P(n+k)}$$
+			$$\Delta(0), \Delta(1), \ldots, \Delta(k) \models  P(0), P(1), \ldots,  P(k)$$
+			$$\forall n>0, {\Delta(n), \ldots, \Delta(n+k), P(n), \ldots, P(n+k-1) \models P(n+k)}$$
+
 \end{frame}	
 \begin{frame}
 	\frametitle{Implémentation}
-		$$\Delta(0), \Delta(1), \ldots, \Delta(k) \models P(0), P(1), \ldots, P(n)$$
-		$$\forall n>0, {\Delta(n), \ldots, \Delta(n+k), P(n), \ldots, P(n+k-1) \models P(n+k)}$$
+
+		
+			$$\Delta(0), \Delta(1), \ldots, \color{red} \Delta(k) \color{black} \models \color{gray} P(0), P(1), \ldots, \color{black} P(k)$$
+			$$\forall n>0, {\Delta(n), \ldots, \color{red} \Delta(n+k) \color{black}, P(n), \ldots, \color{red}P(n+k-1) \color{black} \models  \color{red}P(n+k)}\color{black}$$
 	\begin{itemize}
 		\item{On augmente k jusqu'à échouer le cas de base ou réussir l'induction}
 		\item{Code généré à partir de la syntaxe abstraite AEZ compilée}
@@ -103,7 +105,7 @@
 \begin{frame}[fragile]
 	\frametitle{Une optimisation}
 	
-	\texttt{n1 = 0 -> pre (0 -> pre (0 -> pre n1));}
+	\texttt{a -> pre (b -> pre (c -> pre d));}
 	
 	\
 	
@@ -111,15 +113,37 @@
 	
 	\
 	
-	\texttt{n1(n)  =  (if n=0 then 0 else (if n=1 then 0 else (if n=2 then 0 else n1(n-3))))}
+	\texttt{if n=0 then a(n) else if n=1 then b(n-1) else if n=2 then c(n-2) else d(n-3)}
 	
 	\bigskip
 	
 	Beaucoup de if... On voudrait pouvoir supposer $n>2$ pour l'induction
 \end{frame}
 \begin{frame}
+	\frametitle{Une optimisation}
+	Il suffit d'ajouter des cas de base :
+	
+	$$\Delta(0), \Delta(1), \ldots, \Delta(k+p) \models P(0), P(1), \ldots, P(k+p)$$
+	$$\forall n>p, {\Delta(n), \ldots, \Delta(n+k), P(n), \ldots, P(n+k-1) \models P(n+k)}$$
+	
+	On peut beaucoup simplifier les formules dans l'induction, voire terminer avec un $k$ plus petit.
+\end{frame}
+\begin{frame}
+	\frametitle{Un exemple}
 	
 \end{frame}
+\begin{frame}
+	\frametitle{Choix de $p$}
+	\begin{itemize}
+	\item On prend le plus grand $i$ tel que \texttt{if(n=i)} apparaît dans le code généré
+	\end{itemize}
+	$\implies$ correspond à la plus grande profondeur de flèches dans le code source Lustre
+	
+	\begin{itemize}
+		\item Pas optimal, mais on ne peut pas toujours déterminer le meilleur $p$ statiquement
+	\end{itemize}
+\end{frame}
+
 \end{document}
 %COMPILATION VERS AEZ
 %
