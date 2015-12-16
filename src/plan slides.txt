@@ -1,0 +1,33 @@
+COMPILATION VERS AEZ
+
+Ast lustre et aez côte à côte
+
+On ajoute les constructions intermédiaires à l'ast aez
+
+Elimination :
+
+- formules
+
+- tuples et appels
+	-distribution
+	-renommage
+
+PROCEDE DE K-INDUCTION
+
+Pour chaque terme/formule, une fonction du terme n vers le terme/formule à l'instant n
+
+Formules : cas de base, induction
+
+On alterne entre ajouter un cas de base et augmenter k
+
+UNE OPTIMISATION
+
+exemple de formule pour le cas inductif avec des if n=0,1,2
+
+si on suppose n>2 => formule plus simple
+
+formules bien quantifiées avec plus de cas de base et on suppose n>2 dans l'induction
+
+comment calculer la bonne profondeur ? on prend le plus gros n=k dans le code généré => profondeur maximale de flèches
+
+Limitation : on n'élimine pas tous les cas particuliers, la condition du if peut être plus compliquée => pas praticable dans le cas général

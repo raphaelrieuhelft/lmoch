@@ -10,7 +10,7 @@ Le fichier .ml peut ensuite être compilé (un Makefile est fourni dans le dossi
 
 Pour vérifier le noeud check du fichier examples/ex001.lus, un exemple complet d'utilisation est donc (en se plaçant dans le dossier src) :
 
-./lmoch ../examples/ex001.lus
+./lmoch ../examples/ex001.lus check
 cd ../proofs
 make NAME=ex001_check
 ./ex001_check_proof

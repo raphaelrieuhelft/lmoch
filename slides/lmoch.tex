@@ -1,0 +1,156 @@
+\documentclass[18pt]{beamer}
+\usepackage{etex}
+\usepackage{beamerthemesplit} % new
+\usetheme[secheader]{Madrid}
+%\usetheme{Warsaw}
+\usecolortheme{dolphin}
+\usepackage{graphicx}
+%\usepackage{landscape}
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{amssymb}
+\usepackage[frenchb]{babel}
+\usepackage{amstext}
+\usepackage[utf8]{inputenc}
+%\usepackage[T1]{fontenc}
+\usepackage{pgf,tikz}
+
+
+
+%\usepackage{titletoc}
+
+\newcounter{moncompteur}
+\newtheorem{q}[moncompteur]{\textbf{Question}}{}
+\newtheorem{prop}[moncompteur]{\textbf{Proposition}}{}
+\newtheorem{df}[moncompteur]{\textbf{Définition}}{}
+\newtheorem*{df*}{\textbf{Définition}}{}
+\newtheorem*{prop*}{\textbf{Proposition}}{}
+\newtheorem*{theo*}{\textbf{Théorème}}{}
+
+\newtheorem{rem}[moncompteur]{\textbf{Remarque}}{}
+\newtheorem{theo}[moncompteur]{\textbf{Théorème}}{}
+\newtheorem{conj}[moncompteur]{\textbf{Conjecture}}{}
+\newtheorem{cor}[moncompteur]{\textbf{Corollaire}}{}
+\newtheorem{lm}[moncompteur]{\textbf{Lemme}}{}
+%\newtheorem{nota}[moncompteur]{\textbf{Notation}}{}
+%\newtheorem{conv}[moncompteur]{\textbf{Convention}}{}
+\newtheorem{exa}[moncompteur]{\textbf{Exemple}}{}
+\newtheorem{ex}[moncompteur]{\textbf{Exercice}}{}
+%\newtheorem{app}[moncompteur]{\textbf{Application}}{}
+%\newtheorem{prog}[moncompteur]{\textbf{Algorithme}}{}
+%\newtheorem{hyp}[moncompteur]{\textbf{Hypothèse}}{}
+\newenvironment{dem}{\noindent\textbf{Preuve}\\}{\flushright$\blacksquare$\\}
+\newcommand{\cg}{[\kern-0.15em [}
+\newcommand{\cd}{]\kern-0.15em]}
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\K}{\mathbb{K}}
+\newcommand{\N}{\mathbb{N}}
+\newcommand{\Z}{\mathbb{Z}}
+\newcommand{\C}{\mathbb{C}}
+\newcommand{\U}{\mathbb{U}}
+\newcommand{\Q}{\mathbb{Q}}
+\newcommand{\B}{\mathbb{B}}
+\newcommand{\Prob}{\mathbb P}
+\newcommand{\card}{\mathrm{card}}
+\newcommand{\norm}[1]{\left\lVert#1\right\rVert}
+%\pgfplotsset{compat=newest}
+\newcommand{\La}{\mathcal{L}}
+\newcommand{\Ne}{\mathcal{N}}
+\newcommand{\D}{\mathcal{D}}
+\newcommand{\Ss}{\textsc{safestay}}
+\newcommand{\Sg}{\textsc{safego}}
+\newcommand{\M}{\textsc{move}}
+\newcommand{\E}{\mathcal{E}}
+\newcommand{\V}{\mathcal V}
+\newcommand{\A}{\mathcal A}
+\newcommand{\T}{\mathcal T}
+\newcommand{\Ca}{\mathcal C}
+\setlength{\parindent}{0pt}
+\newcommand{\myrightleftarrows}[1]{\mathrel{\substack{\xrightarrow{#1} \\[-.6ex] \xleftarrow{#1}}}}
+\newcommand{\longrightleftarrows}{\myrightleftarrows{\rule{1cm}{0cm}}}
+\newcommand{\ZnZ}{\Z/n\Z}
+
+
+
+\graphicspath{{./}}
+
+
+\setbeamertemplate{navigation symbols}{%
+	%\insertslidenavigationsymbol
+	%\insertframenavigationsymbol
+	%\insertsubsectionnavigationsymbol
+	%\insertsectionnavigationsymbol
+	%\insertdocnavigationsymbol
+	%\insertbackfindforwardnavigationsymbol
+}
+
+\begin{document}
+\begin{frame}
+	\frametitle{Le procédé de $k$-induction}
+	
+	$$\Delta(0), \Delta(1), \ldots, \Delta(k) \models P(0), P(1), \ldots, P(n)$$
+	$$\forall n>0, {\Delta(n), \ldots, \Delta(n+k), P(n), \ldots, P(n+k-1) \models P(n+k)}$$
+\end{frame}	
+\begin{frame}
+	\frametitle{Implémentation}
+		$$\Delta(0), \Delta(1), \ldots, \Delta(k) \models P(0), P(1), \ldots, P(n)$$
+		$$\forall n>0, {\Delta(n), \ldots, \Delta(n+k), P(n), \ldots, P(n+k-1) \models P(n+k)}$$
+	\begin{itemize}
+		\item{On augmente k jusqu'à échouer le cas de base ou réussir l'induction}
+		\item{Code généré à partir de la syntaxe abstraite AEZ compilée}
+	\end{itemize}	
+\end{frame}
+\begin{frame}[fragile]
+	\frametitle{Une optimisation}
+	
+	\texttt{n1 = 0 -> pre (0 -> pre (0 -> pre n1));}
+	
+	\
+	
+	est compilé en la formule :
+	
+	\
+	
+	\texttt{n1(n)  =  (if n=0 then 0 else (if n=1 then 0 else (if n=2 then 0 else n1(n-3))))}
+	
+	\bigskip
+	
+	Beaucoup de if... On voudrait pouvoir supposer $n>2$ pour l'induction
+\end{frame}
+\begin{frame}
+	
+\end{frame}
+\end{document}
+%COMPILATION VERS AEZ
+%
+%Ast lustre et aez côte à côte
+%
+%On ajoute les constructions intermédiaires à l'ast aez
+%
+%Elimination :
+%
+%- formules
+%
+%- tuples et appels
+%	-distribution
+%	-renommage
+%
+%PROCEDE DE K-INDUCTION
+%
+%Pour chaque terme/formule, une fonction du terme n vers le terme/formule à l'instant n
+%
+%Formules : cas de base, induction
+%
+%On alterne entre ajouter un cas de base et augmenter k
+%
+%UNE OPTIMISATION
+%
+%exemple de formule pour le cas inductif avec des if n=0,1,2
+%
+%si on suppose n>2 => formule plus simple
+%
+%formules bien quantifiées avec plus de cas de base et on suppose n>2 dans l'induction
+%
+%comment calculer la bonne profondeur ? on prend le plus gros n=k dans le code généré => profondeur maximale de flèches
+%
+%Limitation : on n'élimine pas tous les cas particuliers, la condition du if peut être plus compliquée => pas praticable dans le cas général

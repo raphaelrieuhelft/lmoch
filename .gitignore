@@ -17,4 +17,7 @@ src/lmoch
 src/_build
 lib
 
+slides/*
+!slides/lmoch.tex
+
 ignore-*
