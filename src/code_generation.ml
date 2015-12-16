@@ -3,7 +3,9 @@ open Aez_ast
 open Format
 
 let kind_solver = "k_ind_solver.ml"
+let k_ind_solver__no_max_depth = "k_ind_solver__no_max_depth.ml"
 
+let no_max_depth = ref false
 let max_special_case = ref 0
 let update_max_special_case k = if k > !max_special_case then max_special_case := k
 
@@ -136,7 +138,10 @@ let pp_all ff decls input_tvars out_id =
   generate_stream_decls ff decls;
   fprintf ff "let delta_incr n = Formula.make Formula.And [ %a ]@.@." pp_def_names decls;
   fprintf ff "let p_incr n = %a@.@." (pp_formula "  ") (F_term (T_app (out_id, 0)));
-  fprintf ff "let () = kind delta_incr p_incr %i@." !max_special_case
+  if !no_max_depth then 
+	fprintf ff "let () = kind delta_incr p_incr (-1)@."
+  else
+	fprintf ff "let () = kind delta_incr p_incr %i@." !max_special_case
   
   
 let main fileto decls input_tvars output_id =

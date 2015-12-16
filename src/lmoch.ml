@@ -23,7 +23,8 @@ let spec =
    "-norm-only", Arg.Set norm_only, "  stops after normalization";
    "-verbose", Arg.Set verbose, "print intermediate transformations";
    "-v", Arg.Set verbose, "print intermediate transformations";
-   "-run-proof", Arg.Set run_proof, "runs the computed proof immediately"
+   "-run-proof", Arg.Set run_proof, "runs the computed proof immediately";
+   "-no-max-depth",  Arg.Set Code_generation.no_max_depth, "no max depth optimisation";
   ]
 
 let file, main_node =
