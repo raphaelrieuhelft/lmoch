@@ -14,7 +14,7 @@
 \usepackage[utf8]{inputenc}
 %\usepackage[T1]{fontenc}
 \usepackage{pgf,tikz}
-
+\usepackage{listings}
 
 
 %\usepackage{titletoc}
@@ -70,7 +70,21 @@
 \newcommand{\longrightleftarrows}{\myrightleftarrows{\rule{1cm}{0cm}}}
 \newcommand{\ZnZ}{\Z/n\Z}
 
-
+\lstset{frame=,
+	aboveskip=3mm,
+	belowskip=3mm,
+	showstringspaces=false,
+	columns=flexible,
+	basicstyle={\small\ttfamily},
+	numbers=none,
+	numberstyle=\tiny\color{gray},
+	keywordstyle=\color{blue},
+	commentstyle=\color{dkgreen},
+	stringstyle=\color{mauve},
+	breaklines=true,
+	breakatwhitespace=true,
+	tabsize=3
+}
 
 \graphicspath{{./}}
 
@@ -87,15 +101,15 @@
 \begin{document}
 \begin{frame}
 	\frametitle{Le procédé de $k$-induction}
-			$$\Delta(0), \Delta(1), \ldots, \Delta(k) \models  P(0), P(1), \ldots,  P(k)$$
-			$$\forall n>0, {\Delta(n), \ldots, \Delta(n+k), P(n), \ldots, P(n+k-1) \models P(n+k)}$$
+	Cas de base :	$$\Delta(0), \Delta(1), \ldots, \Delta(k) \models  P(0), P(1), \ldots,  P(k)$$
+	Cas inductif : $$\forall n>0, {\Delta(n), \ldots, \Delta(n+k), P(n), \ldots, P(n+k-1) \models P(n+k)}$$
 
 \end{frame}	
 \begin{frame}
 	\frametitle{Implémentation}
 
 		
-			$$\Delta(0), \Delta(1), \ldots, \color{red} \Delta(k) \color{black} \models \color{gray} P(0), P(1), \ldots, \color{black} P(k)$$
+			$$\Delta(0), \Delta(1), \ldots, \color{red} \Delta(k) \color{black} \models \color{gray} P(0), P(1), \ldots, \color{red} P(k)\color{black}$$
 			$$\forall n>0, {\Delta(n), \ldots, \color{red} \Delta(n+k) \color{black}, P(n), \ldots, \color{red}P(n+k-1) \color{black} \models  \color{red}P(n+k)}\color{black}$$
 	\begin{itemize}
 		\item{On augmente k jusqu'à échouer le cas de base ou réussir l'induction}
@@ -128,9 +142,22 @@
 	
 	On peut beaucoup simplifier les formules dans l'induction, voire terminer avec un $k$ plus petit.
 \end{frame}
-\begin{frame}
+\begin{frame}[fragile]
 	\frametitle{Un exemple}
+	\begin{lstlisting}
+	node check () returns (ok: bool);
+	  var n0, n1:int; b:bool;
+	  let
+	    n0 = 0 -> pre n0;
+	    n1 = 0 -> pre n1;
+	    b = true -> pre (true -> false);
+	    ok = if b then n0=n1 else true;
+	  tel
+	\end{lstlisting}
 	
+	\
+	
+	$1$-induction sans l'optimisation, pas besoin d'induction avec !
 \end{frame}
 \begin{frame}
 	\frametitle{Choix de $p$}

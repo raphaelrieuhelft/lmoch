@@ -1,0 +1,8 @@
+node check () returns (ok: bool);
+var n0, n1:int; b:bool;
+let
+	n0 = 0 -> pre n0;
+	n1 = 0 -> pre n1;
+	b = true -> pre (true -> false);
+	ok = if b then n0=n1 else true;
+tel
