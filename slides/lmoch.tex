@@ -98,9 +98,12 @@
 	%\insertdocnavigationsymbol
 	%\insertbackfindforwardnavigationsymbol
 }
-
+\title{Lustre Model Checker}
+\author{Diane Gallois-Wong, Raphaël Rieu-Helft}
 \begin{document}
-
+\begin{frame}
+	\titlepage
+\end{frame}
 \begin{frame}[fragile]
 \frametitle{Exemple de l'énoncé}
 \begin{lstlisting}
@@ -335,13 +338,8 @@ changement d'ast, gestion de $\rightarrow$ et $pre$.
 \end{frame}
 
 
-\section{Génération de code Caml}
-\begin{frame}
-\frametitle{Génération de code Caml}
 
-\end{frame}	
-
-\section{Le procédé de $k$-induction}
+\section{Implémentation du solveur}
 \begin{frame}
 	\frametitle{Le procédé de $k$-induction}
 	Cas de base :	$$\Delta(0), \Delta(1), \ldots, \Delta(k) \models  P(0), P(1), \ldots,  P(k)$$
@@ -349,7 +347,7 @@ changement d'ast, gestion de $\rightarrow$ et $pre$.
 
 \end{frame}	
 \begin{frame}
-	\frametitle{Implémentation}
+	\frametitle{Génération de code}
 
 		
 			$$\Delta(0), \Delta(1), \ldots, \color{red} \Delta(k) \color{black} \models \color{gray} P(0), P(1), \ldots, \color{red} P(k)\color{black}$$
