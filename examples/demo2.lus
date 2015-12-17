@@ -1,0 +1,9 @@
+node check() returns (OK:bool);
+	var test,a,b,c:bool;
+	let
+	a = true;
+	b = true;
+	c = a -> pre (b -> pre c);
+	test = false ->  pre (false -> true);
+	OK = if test then c else true;
+	tel

@@ -345,7 +345,7 @@ changement d'ast, gestion de $\rightarrow$ et $pre$.
 \begin{frame}
 	\frametitle{Le procédé de $k$-induction}
 	Cas de base :	$$\Delta(0), \Delta(1), \ldots, \Delta(k) \models  P(0), P(1), \ldots,  P(k)$$
-	Cas inductif : $$\forall n>0, {\Delta(n), \ldots, \Delta(n+k), P(n), \ldots, P(n+k-1) \models P(n+k)}$$
+	Cas inductif : $$\forall n, {\Delta(n), \ldots, \Delta(n+k), P(n), \ldots, P(n+k-1) \models P(n+k)}$$
 
 \end{frame}	
 \begin{frame}
@@ -384,8 +384,8 @@ changement d'ast, gestion de $\rightarrow$ et $pre$.
 	\frametitle{\optimisation}
 	Il suffit d'ajouter des cas de base :
 	
-	$$\Delta(0), \Delta(1), \ldots, \Delta(k+p) \models P(0), P(1), \ldots, P(k+p)$$
-	$$\forall n>p, {\Delta(n), \ldots, \Delta(n+k), P(n), \ldots, P(n+k-1) \models P(n+k)}$$
+	$$\Delta(0), \Delta(1), \ldots, \color{red}\Delta(k+p)\color{black} \models P(0), P(1), \ldots, \color{red}P(k+p)\color{black}$$
+	$$\color{red}\forall n>p\color{black}, {\Delta(n), \ldots, \Delta(n+k), P(n), \ldots, P(n+k-1) \models P(n+k)}$$
 	
 	On peut beaucoup simplifier les formules dans l'induction, voire terminer avec un $k$ plus petit.
 \end{frame}

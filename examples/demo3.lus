@@ -1,0 +1,20 @@
+node HalfAdder (a, b : bool) returns (sum, carry : bool);
+let
+  sum = if a and b then false else a or b;
+  carry = a and b;
+tel
+
+node FullAdder (a, b, c : bool) returns (sum, carry : bool);
+var s1,c1,c2:bool;
+let
+  (s1, c1) = HalfAdder (a, b);
+  (sum, c2) = HalfAdder (c, s1);
+  carry = c1 or c2;
+tel
+
+node check() returns (ok: bool);
+var s,c: bool;
+let
+	(s,c) = FullAdder(true, false, true);
+	ok = (s=false) and (c=true);
+tel
