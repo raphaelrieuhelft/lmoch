@@ -19,5 +19,5 @@ lib
 
 slides/*
 !slides/lmoch.tex
-
+!slides/lmoch.pdf
 ignore-*
