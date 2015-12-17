@@ -78,6 +78,7 @@
 	basicstyle={\small\ttfamily},
 	numbers=none,
 	numberstyle=\tiny\color{gray},
+    morekeywords={node, returns, var, let, tel, pre, if, then, else},
 	keywordstyle=\color{blue},
 	commentstyle=\color{dkgreen},
 	stringstyle=\color{mauve},
@@ -99,6 +100,40 @@
 }
 
 \begin{document}
+
+\begin{frame}[fragile]
+\frametitle{Exemple de l'énoncé}
+\begin{lstlisting}
+node incr (tic: bool) returns (ok: bool);
+var cpt : int;
+let
+cpt = (0 -> pre cpt) + if tic then 1 else 0;
+ok = true -> (pre cpt) <= cpt;
+tel
+\end{lstlisting}
+
+$$\Delta(n) =
+\begin{cases}
+cpt(n) = ite(n=0, 0, cpt(n-1)) + ite(tic(n), 1, 0)
+\\
+ok(n) = ite(n = 0, true, cpt(n - 1) \leq cpt(n))
+\end{cases}
+$$
+\qquad$P(n) = ok(n)$
+
+\vspace{2em}
+
+	$k$-induction :
+	$$\Delta(0), \Delta(1), \ldots, \Delta(k) \models  P(0), P(1), \ldots,  P(k)$$
+	$$\forall n>0, {\Delta(n), \ldots, \Delta(n+k), P(n), \ldots, P(n+k-1) \models P(n+k)}$$
+
+\end{frame}
+
+\begin{frame}
+\tableofcontents
+\end{frame}
+
+\section{De l'ast typée fournie à l'ast d'AEZ}
 
 
 \begin{frame}
@@ -138,18 +173,7 @@
 		
 		\end{column}
 		\begin{column}{.5\linewidth}
-		
-			
-%			\begin{tabular}{lll}
-%				$f$&::=&
-%				\\
-%				&	| $t$	&terme
-%				\\
-%				&	| $t$ cmp$t$ &\text{comparaison}
-%				\\
-%				&	| $f$ $op$ $f$
-%				&	opération logique
-%			\end{tabular}
+
 			
 			\def\tmpcolor{gray}
 			\def\newcolor{teal}
@@ -169,10 +193,6 @@
 					%\text{it } f \text{ then } t \text{ else } t
 				&	\text{opération logique}
 				\\
-%				\onslide<1>{
-%					\;\;| \; varphi(t,...,t)
-%				&	\text{appel de fonction}
-%				}
 				\only<2->{
 					\textcolor{\oldcolor}
 					}{\;\;| \; \varphi(t,...,t)}
@@ -256,6 +276,7 @@ changement d'ast, gestion de $\rightarrow$ et $pre$.
 
 
 
+\subsection{Étape 1 : traduction, gestion de $\rightarrow$ et $pre$}
 \begin{frame}
 \frametitle{Étape 1 : traduction, gestion de $\rightarrow$ et $pre$}
 	
@@ -287,9 +308,13 @@ changement d'ast, gestion de $\rightarrow$ et $pre$.
 	$$\Phi(e1\rightarrow e2, \;k) \qquad=\qquad \text{if }n=k \text{ then } \Phi(e1,\;k) \text{ else } \Phi(e2,\;k)$$
 	
 \end{frame}
+
+
+\subsection{Étape 2 :
+élimination des termes réduits à une formule}
 \begin{frame}
 \frametitle{Étape 2 :
-Élimination des termes réduits à une formule}
+élimination des termes réduits à une formule}
 	
 	$$f \qquad\longrightarrow\qquad aux$$
 
@@ -299,6 +324,10 @@ changement d'ast, gestion de $\rightarrow$ et $pre$.
 	
 	
 \end{frame}
+
+
+\subsection{Étape 3 :
+élimination des tuples et appels de noeuds}
 \begin{frame}
 \frametitle{Étape 3 :
 élimination des tuples et appels de noeuds}
@@ -306,7 +335,13 @@ changement d'ast, gestion de $\rightarrow$ et $pre$.
 \end{frame}
 
 
+\section{Génération de code Caml}
+\begin{frame}
+\frametitle{Génération de code Caml}
 
+\end{frame}	
+
+\section{Le procédé de $k$-induction}
 \begin{frame}
 	\frametitle{Le procédé de $k$-induction}
 	Cas de base :	$$\Delta(0), \Delta(1), \ldots, \Delta(k) \models  P(0), P(1), \ldots,  P(k)$$
@@ -324,8 +359,12 @@ changement d'ast, gestion de $\rightarrow$ et $pre$.
 		\item{Code généré à partir de la syntaxe abstraite AEZ compilée}
 	\end{itemize}	
 \end{frame}
+
+
+\def\optimisation{Une optimisation : élimination de cas particuliers}
+\section{\optimisation}
 \begin{frame}[fragile]
-	\frametitle{Une optimisation}
+	\frametitle{\optimisation}
 	
 	\texttt{a -> pre (b -> pre (c -> pre d));}
 	
@@ -342,7 +381,7 @@ changement d'ast, gestion de $\rightarrow$ et $pre$.
 	Beaucoup de if... On voudrait pouvoir supposer $n>2$ pour l'induction
 \end{frame}
 \begin{frame}
-	\frametitle{Une optimisation}
+	\frametitle{\optimisation}
 	Il suffit d'ajouter des cas de base :
 	
 	$$\Delta(0), \Delta(1), \ldots, \Delta(k+p) \models P(0), P(1), \ldots, P(k+p)$$
