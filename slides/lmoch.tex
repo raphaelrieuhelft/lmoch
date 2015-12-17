@@ -128,7 +128,7 @@ $$
 
 	$k$-induction :
 	$$\Delta(0), \Delta(1), \ldots, \Delta(k) \models  P(0), P(1), \ldots,  P(k)$$
-	$$\forall n>0, {\Delta(n), \ldots, \Delta(n+k), P(n), \ldots, P(n+k-1) \models P(n+k)}$$
+	$$\forall n,\quad {\Delta(n), \ldots, \Delta(n+k), P(n), \ldots, P(n+k-1) \models P(n+k)}$$
 
 \end{frame}
 
@@ -287,16 +287,16 @@ changement d'ast, gestion de $\rightarrow$ et $pre$.
 	
 	\
 	
-	Objectif : \qquad $x\rightarrow pre \; y \qquad\longrightarrow\qquad \text{if }n=0 \text{ then } x(n) \text{ else } y(n-1)$
+	Objectif : \qquad $x\rightarrow \textcolor{blue}{\text{pre}} \; y \qquad\longrightarrow\qquad \text{if }n=0 \text{ then } x(n) \text{ else } y(n-1)$
 	
 	\
 	
 	\
 	
 	On propage $k$, décalage par rapport à $n$ :
-%	$$pre(e),\;k \quad\longrightarrow\quad e,\;k+1$$
+%	$$\textcolor{blue}{\text{pre}} \;e,\;k \quad\longrightarrow\quad e,\;k+1$$
 	\vspace{-1em}
-	$$\Phi(pre(e),\;k) \qquad=\qquad \Phi(e,\;k+1)$$
+	$$\Phi(\textcolor{blue}{\text{pre}} \;e,\;k) \qquad=\qquad \Phi(e,\;k+1)$$
 	
 	\
 	
@@ -334,6 +334,36 @@ changement d'ast, gestion de $\rightarrow$ et $pre$.
 \begin{frame}
 \frametitle{Étape 3 :
 élimination des tuples et appels de noeuds}
+	
+	
+	$$(x1,x2) = (t1, t2) \qquad\longrightarrow\qquad
+	\begin{cases}
+		x1 = t1 
+		\\
+		x2 = t2
+	\end{cases}$$
+	
+	\
+	
+	$$\text{if }b \text{ then } (u1,u2) \text{ else } (v1,v2)
+	\qquad\longrightarrow\qquad
+	(\text{if }b \text{ then } u1 \text{ else } v1,\;
+	%\text{if }b \text{ then } a2 \text{ else } b2
+	...
+	)$$
+	
+	\
+	
+	$$nd(t1,t2)
+	\qquad\longrightarrow\qquad
+	(out1,out2,out3)$$
+	où $out1$, $out2$, $out3$ sont des variables fraîches.
+	
+	On ajoute toutes les formules compilées de $nd$ en renommant toutes les variables en variables fraîches, en particulier les sorties en $out1$, $out2$, $out3$.
+	
+	Soit $in1$, $in2$ les nouveaux noms des entrées, on ajoute aussi les formules $in1=t1$, $in2=t2$.
+	
+	
 	
 \end{frame}
 
